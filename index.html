@@ -11,7 +11,7 @@
 <input id="name" placeholder="名前"><br>
 <input id="code" placeholder="コード"><br>
 <textarea id="content" placeholder="本文"></textarea><br>
-<button onclick="post()">投稿</button>
+<button onclick="showReplyForm('${id}', '${id}')">返信</button>
 
 <h2>投稿一覧</h2>
 <div id="posts"></div>
@@ -53,22 +53,20 @@ async function load() {
 }
 
 // ===== 返信フォーム =====
-function showReplyForm(parent_id) {
+function showReplyForm(parent_id, root_id) {
   const div = document.getElementById("replyForm-" + parent_id);
 
   div.innerHTML = `
     <textarea id="replyContent-${parent_id}" placeholder="返信"></textarea><br>
-    <button onclick="sendReply('${parent_id}')">送信</button>
+    <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
   `;
 }
 
 // ===== 返信送信 =====
-async function sendReply(parent_id) {
+async function sendReply(parent_id, root_id) {
   const name = document.getElementById("name").value;
   const code = document.getElementById("code").value;
   const content = document.getElementById("replyContent-" + parent_id).value;
-
-  const root_id = parent_id.split("-")[0];
 
   const res = await fetch(API, {
     method: "POST",
@@ -86,11 +84,7 @@ async function sendReply(parent_id) {
 
   if (json.status === "ok") {
     alert("返信成功");
-
-    // フォーム消す
     document.getElementById("replyForm-" + parent_id).innerHTML = "";
-
-    // 再読み込み
     load();
   } else {
     alert("エラー: " + json.message);
@@ -121,7 +115,7 @@ function renderReplies(container, replies, root_id) {
 
   replies.forEach(r => {
     // 親投稿は除外（ここ重要）
-    if (r[0] === root_id) return;
+    if (r.id === root_id) return;
 
     const el = document.createElement("div");
 
