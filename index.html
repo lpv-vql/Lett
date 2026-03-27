@@ -52,7 +52,7 @@ async function load() {
 
     div.appendChild(el);
 
-    const related = allReplies.filter(r => String(r.root_id) === String(root_id));
+    const related = replies.filter(r => String(r.root_id) === String(id));
 
     if (related.length === 1) {
       renderReplies(
