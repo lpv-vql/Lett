@@ -23,12 +23,13 @@ let allReplies = [];
 let openedReplies = {}; // 開閉状態管理
 
 async function load() {
-  allReplies = replies;
   const res = await fetch(API + "?action=getAll");
   const json = await res.json();
 
   const posts = json.data.posts;
   const replies = json.data.replies;
+
+  allReplies = replies; // ← ここに移動！！
 
   const div = document.getElementById("posts");
   div.innerHTML = "";
