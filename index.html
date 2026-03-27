@@ -19,9 +19,11 @@
 <script>
 const API = "https://script.google.com/macros/s/AKfycbwQSI4wMAgiw5TRn_c0KXWSwCbLf424X5b1-GuBASDbhiuveM49k64R-pfEl4hB3bhH/exec";
 
+let allReplies = []; 
 let openedReplies = {}; // 開閉状態管理
 
 async function load() {
+  allReplies = replies;
   const res = await fetch(API + "?action=getAll");
   const json = await res.json();
 
@@ -35,7 +37,7 @@ async function load() {
     const el = document.createElement("div");
 
     const id = String(p.id);
-    const related = replies.filter(r => String(r.root_id) === String(id));
+    const related = replies.filter(r =>String(r.parent_id) === String(id));
 
     el.innerHTML = `
       <hr>
@@ -106,21 +108,26 @@ function toggleReplies(root_id) {
   const div = document.getElementById("replies-" + root_id);
   const btn = document.getElementById("toggleBtn-" + root_id);
 
+  const count = allReplies.filter(r =>
+    String(r.parent_id) === String(root_id)
+  ).length;
+
   if (openedReplies[root_id]) {
     div.innerHTML = "";
     openedReplies[root_id] = false;
-    btn.innerText = "返信を表示";
+    btn.innerText = `返信を表示 (${count})`;
     return;
   }
 
   openedReplies[root_id] = true;
-  btn.innerText = "返信を非表示";
+  btn.innerText = `返信を非表示 (${count})`;
 
-  const related = replies.filter(r => String(r.root_id) === String(root_id));
+  const related = allReplies.filter(r =>
+    String(r.parent_id) === String(root_id)
+  );
 
   renderReplies(div, related, root_id);
 }
-
 // ===== 返信描画（再帰対応） =====
 function renderReplies(container, replies, root_id) {
   container.innerHTML = "";
