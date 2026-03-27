@@ -11,7 +11,7 @@
 <input id="name" placeholder="名前"><br>
 <input id="code" placeholder="コード"><br>
 <textarea id="content" placeholder="本文"></textarea><br>
-<button onclick="showReplyForm('${id}', '${id}')">返信</button>
+<button onclick="post()">投稿</button>
 
 <h2>投稿一覧</h2>
 <div id="posts"></div>
@@ -41,7 +41,7 @@ async function load() {
       <b>${name}</b> (${uid})<br>
       ${content}<br><br>
 
-      <button onclick="showReplyForm('${id}')">返信</button>
+      <button onclick="showReplyForm('${id}', '${id}')">返信</button>
       <button onclick="toggleReplies('${id}')">返信を表示</button>
 
       <div id="replyForm-${id}"></div>
