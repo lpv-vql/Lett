@@ -17,7 +17,7 @@
 <div id="posts"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbxRy7fHXxrJ7EFW2JVemksWNIxyyNIMOHap6uSBoOpf2QibwQ7dMv6Y2EpYZhBtM-14/exec";
+const API = "https://script.google.com/macros/s/AKfycbzyG2Tsd0AtxIFeDk1bOf-MdisaUY5rreI9kMIH2PSj3iL7hXmlxtDGEXhz24H7UjMA/exec";
 
 let openedReplies = {}; // 開閉状態管理
 
@@ -31,10 +31,10 @@ async function load() {
   json.data.forEach(p => {
     const el = document.createElement("div");
 
-    const id = p[0];
-    const name = p[6];
-    const uid = p[7].slice(0,8);
-    const content = p[8];
+    const id = p.id;
+    const name = p.user_name;
+    const uid = p.user_id.slice(0,8);
+    const content = p.content;
 
     el.innerHTML = `
       <hr>
@@ -125,16 +125,16 @@ function renderReplies(container, replies, root_id) {
 
     const el = document.createElement("div");
 
-    const id = r[0];
-    const parent = r[2];
-    const depth = r[3];
+    const id = r.id;
+    const parent = r.parent_id;
+    const depth = r.depth;
 
     el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
 
     el.innerHTML = `
       <div style="border-left:2px solid #ccc; padding-left:8px;">
-        <b>${r[6]}</b> (${r[7].slice(0,8)})<br>
-        ${r[8]}<br>
+        <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
+        ${r.content}<br>
 
         <button onclick="showReplyForm('${id}')">返信</button>
       </div>
