@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>SNS</title>
+<meta charset="UTF-8">
+<title>SNS</title>
 </head>
 <body>
 
-<h1>SNSテスト</h1>
+<h1>SNS</h1>
 
 <input id="name" placeholder="名前"><br>
 <input id="code" placeholder="コード"><br>
@@ -17,7 +17,7 @@
 <div id="posts"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbxRy7fHXxrJ7EFW2JVemksWNIxyyNIMOHap6uSBoOpf2QibwQ7dMv6Y2EpYZhBtM-14/exec";
+const API = "ここにGASのURL";
 
 async function load() {
   const res = await fetch(API + "?action=getPosts");
@@ -28,11 +28,83 @@ async function load() {
 
   json.data.forEach(p => {
     const el = document.createElement("div");
+
+    const id = p[0];
+    const name = p[6];
+    const uid = p[7].slice(0,8);
+    const content = p[8];
+
     el.innerHTML = `
       <hr>
-      <b>${p[6]}</b> (${p[7].slice(0,8)})<br>
-      ${p[8]}
+      <b>${name}</b> (${uid})<br>
+      ${content}<br><br>
+
+      <button onclick="showReplyForm('${id}')">返信</button>
+      <button onclick="loadReplies('${id}')">返信を表示</button>
+
+      <div id="replyForm-${id}"></div>
+      <div id="replies-${id}"></div>
     `;
+
+    div.appendChild(el);
+  });
+}
+
+function showReplyForm(parent_id) {
+  const div = document.getElementById("replyForm-" + parent_id);
+
+  div.innerHTML = `
+    <textarea id="replyContent-${parent_id}" placeholder="返信"></textarea><br>
+    <button onclick="sendReply('${parent_id}')">送信</button>
+  `;
+}
+
+async function sendReply(parent_id) {
+  const name = document.getElementById("name").value;
+  const code = document.getElementById("code").value;
+  const content = document.getElementById("replyContent-" + parent_id).value;
+
+  const res = await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "createReply",
+      parent_id: parent_id,
+      root_id: parent_id.split("-")[0],
+      user_name: name,
+      code: code,
+      content: content
+    })
+  });
+
+  const json = await res.json();
+
+  if (json.status === "ok") {
+    alert("返信成功");
+    loadReplies(parent_id.split("-")[0]);
+  } else {
+    alert("エラー: " + json.message);
+  }
+}
+
+async function loadReplies(root_id) {
+  const res = await fetch(API + "?action=getReplies&root_id=" + root_id);
+  const json = await res.json();
+
+  const div = document.getElementById("replies-" + root_id);
+  div.innerHTML = "";
+
+  json.data.forEach(r => {
+    const el = document.createElement("div");
+
+    el.style.marginLeft = (r[3] * 20) + "px";
+
+    el.innerHTML = `
+      <div style="border-left:2px solid #ccc; padding-left:8px;">
+        <b>${r[6]}</b> (${r[7].slice(0,8)})<br>
+        ${r[8]}
+      </div>
+    `;
+
     div.appendChild(el);
   });
 }
