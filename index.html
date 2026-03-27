@@ -35,6 +35,7 @@ async function load() {
     const el = document.createElement("div");
 
     const id = p.id;
+    const related = replies.filter(r => r.root_id === id);
 
     el.innerHTML = `
       <hr>
@@ -42,7 +43,8 @@ async function load() {
       ${p.content}<br><br>
 
       <button onclick="showReplyForm('${id}', '${id}')">返信</button>
-      <button onclick="toggleReplies('${id}')">返信を表示</button>
+
+      <button id="toggleBtn-${id}">返信を表示 (${related.length})</button>
 
       <div id="replyForm-${id}"></div>
       <div id="replies-${id}"></div>
@@ -102,21 +104,23 @@ async function sendReply(parent_id, root_id) {
 }
 
 // ===== 表示/非表示トグル =====
-async function toggleReplies(root_id) {
+function toggleReplies(root_id) {
   const div = document.getElementById("replies-" + root_id);
+  const btn = document.getElementById("toggleBtn-" + root_id);
 
   if (openedReplies[root_id]) {
     div.innerHTML = "";
     openedReplies[root_id] = false;
+    btn.innerText = "返信を表示";
     return;
   }
 
   openedReplies[root_id] = true;
+  btn.innerText = "返信を非表示";
 
-  const res = await fetch(API + "?action=getReplies&root_id=" + root_id);
-  const json = await res.json();
+  const related = allReplies.filter(r => r.root_id === root_id);
 
-  renderReplies(div, json.data, root_id);
+  renderReplies(div, related, root_id);
 }
 
 // ===== 返信描画（再帰対応） =====
