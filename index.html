@@ -35,7 +35,7 @@ async function load() {
     const el = document.createElement("div");
 
     const id = String(p.id);
-    const related = replies.filter(r => String(r.root_id) === String(id));;
+    const related = replies.filter(r => String(r.root_id) === String(id));
 
     el.innerHTML = `
       <hr>
@@ -118,7 +118,7 @@ function toggleReplies(root_id) {
   openedReplies[root_id] = true;
   btn.innerText = "返信を非表示";
 
-  const related = allReplies.filter(r => r.root_id === root_id);
+  const related = allReplies.filter(r => String(r.root_id) === String(root_id));
 
   renderReplies(div, related, root_id);
 }
