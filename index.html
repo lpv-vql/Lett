@@ -111,6 +111,11 @@ async function toggleReplies(root_id) {
 
 // ===== 返信描画（再帰対応） =====
 function renderReplies(container, replies, root_id) {
+
+  
+  console.log(typeof id, id);
+
+  
   container.innerHTML = "";
 
   replies.forEach(r => {
