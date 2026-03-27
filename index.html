@@ -127,37 +127,87 @@ function toggleReplies(root_id) {
     String(r.parent_id) === String(root_id)
   );
 
-  renderReplies(div, allReplies, root_id);
+  renderReplies(div, root_id, 1);
 }
 
-// ===== 返信描画（再帰対応） =====
-function renderReplies(container, allReplies, parent_id, depth = 1) {
-  const children = allReplies.filter(r =>
+function getChildren(parent_id) {
+  return allReplies.filter(r =>
     String(r.parent_id) === String(parent_id)
   );
+}
 
-  children.forEach(r => {
-    const el = document.createElement("div");
+function createReplyElement(r, depth) {
+  const el = document.createElement("div");
 
-    const id = String(r.id);
+  el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
 
-    el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
+  el.innerHTML = `
+    <div style="border-left:2px solid #ccc; padding-left:8px;">
+      <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
+      ${r.content}<br>
 
-    el.innerHTML = `
-      <div style="border-left:2px solid #ccc; padding-left:8px;">
-        <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
-        ${r.content}<br>
+      <button onclick="showReplyForm('${r.id}', '${r.root_id}')">返信</button>
+    </div>
 
-        <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
-      </div>
+    <div id="replyForm-${r.id}"></div>
+  `;
 
-      <div id="replyForm-${id}"></div>
-      <div id="replies-${id}"></div>
-    `;
+  return el;
+}
+  
+// ===== 返信描画（再帰対応） =====
+function renderReplies(container, parent_id, depth = 1) {
+  const children = getChildren(parent_id);
 
+  // ===== 子が1個だけ → 直線表示 =====
+  if (children.length === 1) {
+    let current = children[0];
+
+    while (current) {
+      const el = createReplyElement(current, 0); // インデントなし
+      container.appendChild(el);
+
+      const next = getChildren(current.id);
+      if (next.length !== 1) break;
+
+      current = next[0];
+    }
+
+    // 分岐が出たら再帰
+    if (current) {
+      renderReplies(container, current.id, depth + 1);
+    }
+
+    return;
+  }
+
+  // ===== 分岐あり =====
+  children.forEach(child => {
+    const el = createReplyElement(child, depth);
     container.appendChild(el);
 
-    renderReplies(container, allReplies, id, depth + 1);
+    const sub = document.createElement("div");
+    container.appendChild(sub);
+
+    const subChildren = getChildren(child.id);
+
+    if (subChildren.length > 0) {
+      // トグルボタン
+      const btn = document.createElement("button");
+      btn.innerText = `返信を表示 (${subChildren.length})`;
+
+      btn.onclick = () => {
+        if (sub.innerHTML) {
+          sub.innerHTML = "";
+          btn.innerText = `返信を表示 (${subChildren.length})`;
+        } else {
+          renderReplies(sub, child.id, depth + 1);
+          btn.innerText = `返信を非表示 (${subChildren.length})`;
+        }
+      };
+
+      container.appendChild(btn);
+    }
   });
 }
   
