@@ -44,15 +44,13 @@ async function load() {
 
       <button onclick="showReplyForm('${id}', '${id}')">返信</button>
 
-      <button id="toggleBtn-${id}">返信を表示 (${related.length})</button>
+      <button id="toggleBtn-${id}" onclick="toggleReplies('${id}')">返信を表示 (${related.length})</button>
 
       <div id="replyForm-${id}"></div>
       <div id="replies-${id}"></div>
     `;
 
     div.appendChild(el);
-
-    const related = replies.filter(r => String(r.root_id) === String(id));
 
     if (related.length === 1) {
       renderReplies(
@@ -118,7 +116,7 @@ function toggleReplies(root_id) {
   openedReplies[root_id] = true;
   btn.innerText = "返信を非表示";
 
-  const related = allReplies.filter(r => String(r.root_id) === String(root_id));
+  const related = replies.filter(r => String(r.root_id) === String(root_id));
 
   renderReplies(div, related, root_id);
 }
