@@ -58,7 +58,7 @@ function showReplyForm(parent_id, root_id) {
 
   div.innerHTML = `
     <textarea id="replyContent-${parent_id}" placeholder="返信"></textarea><br>
-    <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
+    <button onclick="sendReply('${parent_id}', '${root_id}')">送信</button>
   `;
 }
 
@@ -130,7 +130,7 @@ function renderReplies(container, replies, root_id) {
         <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
         ${r.content}<br>
 
-        <button onclick="showReplyForm('${id}')">返信</button>
+        <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
       </div>
 
       <div id="replyForm-${id}"></div>
