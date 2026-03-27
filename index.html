@@ -22,24 +22,24 @@ const API = "https://script.google.com/macros/s/AKfycbw9ryz7uYfRVMGqEJJK5tNZw9VH
 let openedReplies = {}; // 開閉状態管理
 
 async function load() {
-  const res = await fetch(API + "?action=getPosts");
+  const res = await fetch(API + "?action=getAll");
   const json = await res.json();
+
+  const posts = json.data.posts;
+  const replies = json.data.replies;
 
   const div = document.getElementById("posts");
   div.innerHTML = "";
 
-  json.data.forEach(p => {
+  posts.forEach(p => {
     const el = document.createElement("div");
 
     const id = p.id;
-    const name = p.user_name;
-    const uid = p.user_id.slice(0,8);
-    const content = p.content;
 
     el.innerHTML = `
       <hr>
-      <b>${name}</b> (${uid})<br>
-      ${content}<br><br>
+      <b>${p.user_name}</b> (${p.user_id.slice(0,8)})<br>
+      ${p.content}<br><br>
 
       <button onclick="showReplyForm('${id}', '${id}')">返信</button>
       <button onclick="toggleReplies('${id}')">返信を表示</button>
@@ -49,6 +49,16 @@ async function load() {
     `;
 
     div.appendChild(el);
+
+    const related = replies.filter(r => r.root_id === id);
+
+    if (related.length === 1) {
+      renderReplies(
+        document.getElementById("replies-" + id),
+        related,
+        id
+      );
+    }
   });
 }
 
@@ -117,30 +127,37 @@ function renderReplies(container, replies, root_id) {
   replies.forEach(r => {
     // 親投稿は除外（ここ重要）
     if (r.id === root_id) return;
+      const id = p.id;
+      const name = p.user_name;
+      const uid = p.user_id.slice(0,8);
+      const content = p.content;
 
-    const el = document.createElement("div");
+      el.innerHTML = `
+        <hr>
+        <b>${name}</b> (${uid})<br>
+        ${content}<br><br>
 
-    const id = String(r.id);
-    const parent = String(r.parent_id);
-    const root = String(r.root_id);
-    const depth = r.depth;
+        <button onclick="showReplyForm('${id}', '${id}')">返信</button>
+        <button onclick="toggleReplies('${id}')">返信を表示</button>
 
-    el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
+        <div id="replyForm-${id}"></div>
+        <div id="replies-${id}"></div>
+      `;
 
-    el.innerHTML = `
-      <div style="border-left:2px solid #ccc; padding-left:8px;">
-        <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
-        ${r.content}<br>
+      document.getElementById("posts").appendChild(el);
 
-        <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
-      </div>
+      const res = await fetch(API + "?action=getReplies&root_id=" + id);
+      const json = await res.json();
 
-      <div id="replyForm-${id}"></div>
-    `;
-
-    container.appendChild(el);
-  });
-}
+      if (json.data.length === 1) {
+        renderReplies(
+          document.getElementById("replies-" + id),
+          json.data,
+          id
+        );
+      }
+    });
+  }
 
 // ===== 投稿 =====
 async function post() {
