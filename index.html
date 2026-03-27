@@ -34,8 +34,8 @@ async function load() {
   posts.forEach(p => {
     const el = document.createElement("div");
 
-    const id = p.id;
-    const related = replies.filter(r => r.root_id === id);
+    const id = String(p.id);
+    const related = replies.filter(r => String(r.root_id) === String(id));;
 
     el.innerHTML = `
       <hr>
@@ -52,7 +52,7 @@ async function load() {
 
     div.appendChild(el);
 
-    const related = replies.filter(r => r.root_id === id);
+    const related = allReplies.filter(r => String(r.root_id) === String(root_id));
 
     if (related.length === 1) {
       renderReplies(
