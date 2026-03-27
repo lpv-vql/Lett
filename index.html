@@ -121,44 +121,36 @@ async function toggleReplies(root_id) {
 
 // ===== 返信描画（再帰対応） =====
 function renderReplies(container, replies, root_id) {
-
   container.innerHTML = "";
 
   replies.forEach(r => {
-    // 親投稿は除外（ここ重要）
     if (r.id === root_id) return;
-      const id = p.id;
-      const name = p.user_name;
-      const uid = p.user_id.slice(0,8);
-      const content = p.content;
 
-      el.innerHTML = `
-        <hr>
+    const el = document.createElement("div");
+
+    const id = String(r.id);
+    const name = r.user_name;
+    const uid = r.user_id.slice(0,8);
+    const content = r.content;
+    const depth = r.depth;
+
+    el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
+
+    el.innerHTML = `
+      <div style="border-left:2px solid #ccc; padding-left:8px;">
         <b>${name}</b> (${uid})<br>
-        ${content}<br><br>
+        ${content}<br>
 
-        <button onclick="showReplyForm('${id}', '${id}')">返信</button>
-        <button onclick="toggleReplies('${id}')">返信を表示</button>
+        <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
+      </div>
 
-        <div id="replyForm-${id}"></div>
-        <div id="replies-${id}"></div>
-      `;
+      <div id="replyForm-${id}"></div>
+    `;
 
-      document.getElementById("posts").appendChild(el);
-
-      const res = await fetch(API + "?action=getReplies&root_id=" + id);
-      const json = await res.json();
-
-      if (json.data.length === 1) {
-        renderReplies(
-          document.getElementById("replies-" + id),
-          json.data,
-          id
-        );
-      }
-    });
-  }
-
+    container.appendChild(el);
+  });
+}
+  
 // ===== 投稿 =====
 async function post() {
   const name = document.getElementById("name").value;
