@@ -127,37 +127,37 @@ function toggleReplies(root_id) {
     String(r.parent_id) === String(root_id)
   );
 
-  renderReplies(div, related, root_id);
+  renderReplies(div, allReplies, root_id);
 }
+
 // ===== 返信描画（再帰対応） =====
-function renderReplies(container, replies, root_id) {
-  container.innerHTML = "";
+function renderReplies(container, allReplies, parent_id, depth = 1) {
+  const children = allReplies.filter(r =>
+    String(r.parent_id) === String(parent_id)
+  );
 
-  replies.forEach(r => {
-    if (r.id === root_id) return;
-
+  children.forEach(r => {
     const el = document.createElement("div");
 
     const id = String(r.id);
-    const name = r.user_name;
-    const uid = r.user_id.slice(0,8);
-    const content = r.content;
-    const depth = r.depth;
 
     el.style.marginLeft = Math.min(depth, 2) * 20 + "px";
 
     el.innerHTML = `
       <div style="border-left:2px solid #ccc; padding-left:8px;">
-        <b>${name}</b> (${uid})<br>
-        ${content}<br>
+        <b>${r.user_name}</b> (${r.user_id.slice(0,8)})<br>
+        ${r.content}<br>
 
         <button onclick="showReplyForm('${id}', '${r.root_id}')">返信</button>
       </div>
 
       <div id="replyForm-${id}"></div>
+      <div id="replies-${id}"></div>
     `;
 
     container.appendChild(el);
+
+    renderReplies(container, allReplies, id, depth + 1);
   });
 }
   
