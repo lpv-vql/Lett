@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SNS</title>
+</head>
+<body>
+
+<h1>SNSテスト</h1>
+
+<input id="name" placeholder="名前"><br>
+<input id="code" placeholder="コード"><br>
+<textarea id="content" placeholder="本文"></textarea><br>
+<button onclick="post()">投稿</button>
+
+<h2>投稿一覧</h2>
+<div id="posts"></div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxRy7fHXxrJ7EFW2JVemksWNIxyyNIMOHap6uSBoOpf2QibwQ7dMv6Y2EpYZhBtM-14/exec";
+
+async function load() {
+  const res = await fetch(API + "?action=getPosts");
+  const json = await res.json();
+
+  const div = document.getElementById("posts");
+  div.innerHTML = "";
+
+  json.data.forEach(p => {
+    const el = document.createElement("div");
+    el.innerHTML = `
+      <hr>
+      <b>${p[6]}</b> (${p[7].slice(0,8)})<br>
+      ${p[8]}
+    `;
+    div.appendChild(el);
+  });
+}
+
+async function post() {
+  const name = document.getElementById("name").value;
+  const code = document.getElementById("code").value;
+  const content = document.getElementById("content").value;
+
+  const res = await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "createPost",
+      user_name: name,
+      code: code,
+      content: content
+    })
+  });
+
+  const json = await res.json();
+
+  if (json.status === "ok") {
+    alert("投稿成功");
+    load();
+  } else {
+    alert("エラー: " + json.message);
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>
