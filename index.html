@@ -159,49 +159,27 @@ function createReplyElement(r, depth) {
 function renderReplies(container, parent_id, depth = 1) {
   const children = getChildren(parent_id);
 
-  // ===== 子が1個だけ → 直線表示 =====
-  if (children.length === 1) {
-    let current = children[0];
-
-    while (current) {
-      const el = createReplyElement(current, 0); // インデントなし
-      container.appendChild(el);
-
-      const next = getChildren(current.id);
-      if (next.length !== 1) break;
-
-      current = next[0];
-    }
-
-    // 分岐が出たら再帰
-    if (current) {
-      renderReplies(container, current.id, depth + 1);
-    }
-
-    return;
-  }
-
-  // ===== 分岐あり =====
   children.forEach(child => {
+    // 親返信の下に表示
     const el = createReplyElement(child, depth);
     container.appendChild(el);
 
-    const sub = document.createElement("div");
-    container.appendChild(sub);
+    const subContainer = document.createElement("div");
+    container.appendChild(subContainer);
 
     const subChildren = getChildren(child.id);
 
     if (subChildren.length > 0) {
-      // トグルボタン
+      // 子返信用トグルボタン
       const btn = document.createElement("button");
       btn.innerText = `返信を表示 (${subChildren.length})`;
 
       btn.onclick = () => {
-        if (sub.innerHTML) {
-          sub.innerHTML = "";
+        if (subContainer.innerHTML) {
+          subContainer.innerHTML = "";
           btn.innerText = `返信を表示 (${subChildren.length})`;
         } else {
-          renderReplies(sub, child.id, depth + 1);
+          renderReplies(subContainer, child.id, depth + 1); // ← depth + 1
           btn.innerText = `返信を非表示 (${subChildren.length})`;
         }
       };
