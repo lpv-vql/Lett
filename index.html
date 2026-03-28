@@ -159,38 +159,69 @@ function createReplyElement(r, depth) {
 function renderReplies(container, parent_id, depth = 1) {
   const children = getChildren(parent_id);
 
+  if (children.length === 1) {
+    let chain = [];
+    let current = children[0];
+
+    // 直線チェーンを集める
+    while (current) {
+      chain.push(current);
+      const next = getChildren(current.id);
+      if (next.length !== 1) break;
+      current = next[0];
+    }
+
+    if (chain.length > 2) {
+      // 先頭
+      container.appendChild(createReplyElement(chain[0], depth));
+
+      // 途中省略
+      const skipEl = document.createElement("div");
+      skipEl.style.marginLeft = Math.min(depth, 2) * 20 + "px";
+      skipEl.innerHTML = "<i>(省略)</i>";
+      container.appendChild(skipEl);
+
+      // 末尾
+      container.appendChild(createReplyElement(chain[chain.length - 1], depth));
+    } else {
+      // 2個以下なら全部表示
+      chain.forEach(r => {
+        container.appendChild(createReplyElement(r, depth));
+      });
+    }
+
+    // 最後の子の下に再帰
+    if (current) {
+      renderReplies(container, current.id, depth + 1);
+    }
+
+    return;
+  }
+
+  // 分岐がある場合
   children.forEach(child => {
     const el = createReplyElement(child, depth);
     container.appendChild(el);
 
-    const subContainer = document.createElement("div");
-    container.appendChild(subContainer);
+    const sub = document.createElement("div");
+    container.appendChild(sub);
 
     const subChildren = getChildren(child.id);
-
     if (subChildren.length > 0) {
-      const btnId = "toggleBtn-" + child.id;
-      let btn = document.getElementById(btnId);
+      const btn = document.createElement("button");
+      btn.innerText = `返信を表示 (${subChildren.length})`;
 
-      if (!btn) {
-        btn = document.createElement("button");
-        btn.id = btnId;
-        btn.innerText = `返信を表示 (${subChildren.length})`;
+      btn.onclick = () => {
+        if (sub.innerHTML) {
+          sub.innerHTML = "";
+          btn.innerText = `返信を表示 (${subChildren.length})`;
+        } else {
+          renderReplies(sub, child.id, depth + 1);
+          btn.innerText = `返信を非表示 (${subChildren.length})`;
+        }
+      };
 
-        btn.onclick = () => {
-          openedReplies[child.id] = !openedReplies[child.id];
-
-          if (openedReplies[child.id]) {
-            renderReplies(subContainer, child.id, depth + 1);
-            btn.innerText = `返信を非表示 (${subChildren.length})`;
-          } else {
-            subContainer.innerHTML = "";
-            btn.innerText = `返信を表示 (${subChildren.length})`;
-          }
-        };
-
-        container.appendChild(btn);
-      }
+      container.appendChild(btn);
     }
   });
 }
