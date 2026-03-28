@@ -67,12 +67,14 @@
       const postIdStr = String(p.post_id);
       const depth = postIdStr.split('-').length;
 
+      const safeContent = p.content ? String(p.content) : "";
+
       div.innerHTML = `
         <div class="post-header">
-        <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
-        <span class="post-id">#${postIdStr}</span>
+          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
+          <span class="post-id">#${postIdStr}</span>
         </div>
-        <div class="post-content">${md.render(p.content)}</div>
+        <div class="post-content">${md.render(safeContent)}</div>
         <button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示</button>
         <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
@@ -115,19 +117,36 @@
       }
     }
 
-    async function submitPost() {
+async function submitPost() {
+      const btn = document.querySelector('#post-form button'); // 投稿ボタン
+      const contentField = document.getElementById('content');
       const data = {
         displayName: document.getElementById('displayName').value,
         userId: document.getElementById('userId').value,
-        content: document.getElementById('content').value,
+        content: contentField.value,
         parentId: "" 
       };
+
+      if (!data.content.trim()) return; // 空送信防止
+      
+      // ボタンを無効化
+      const originalText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = "送信中...";
+
       localStorage.setItem('displayName', data.displayName);
       localStorage.setItem('userId', data.userId);
       
-      await callGas("addNewPost", data);
-      document.getElementById('content').value = '';
-      loadTimeline();
+      try {
+        await callGas("addNewPost", data);
+        contentField.value = '';
+        await loadTimeline();
+      } catch (e) {
+        alert("送信に失敗しました");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+      }
     }
   </script>
 </body>
