@@ -103,7 +103,9 @@
         container.style.display = 'block';
         btn.innerText = '返信を非表示';
     
-        const replies = await callGas("fetchPosts", { parentId: postId });
+        const userId = document.getElementById('userId').value;
+        const replies = await callGas("fetchPosts", { parentId: postId, userId: userId });
+        
         container.innerHTML = '';
     
         // ここも念のため String() を挟む
