@@ -11,8 +11,9 @@
     input, textarea, button { border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
     button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; }
     button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
-    button.secondary { transition: all 0.2s; }
-    button.secondary:active { transform: scale(0.9); /* 押した時に少し凹む演出 */ }
+    .btn-like { transition: all 0.2s; background: #fdfdfd; border: 1px solid #eee; }
+    .btn-like:hover { background: #fff0f0; border-color: #ffbaba; }
+    .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; }
     .post-header { font-size: 12px; color: #777; margin-bottom: 5px; }
     .user-name { font-weight: bold; color: #333; }
@@ -83,10 +84,10 @@
         <div class="post-footer">
           ${replyBtnHtml} 
           <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
+          <button class="secondary btn-like" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
+            ❤️ ${p.likeCount || 0}
+          </button>
         </div>
-        <button class="secondary" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
-          ❤️ ${p.likeCount || 0}
-        </button>
         <div id="reply-form-container-${postIdStr}"></div>
         <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
@@ -206,19 +207,22 @@
       const userId = document.getElementById('userId').value;
       if (!userId) return alert("いいねするには秘密コードが必要です");
 
-      // 連打防止
       btn.disabled = true;
-
       const res = await callGas("toggleLike", { postId, userId });
+  
       if (res.success) {
-        // 本来は再読み込みすべきですが、とりあえず数字を仮で増減させて反応を出す
         const currentCount = parseInt(btn.innerText.replace('❤️ ', ''));
         btn.innerText = `❤️ ${res.liked ? currentCount + 1 : currentCount - 1}`;
-        btn.style.color = res.liked ? "#e0245e" : "#333"; // いいね中は赤くする
+    
+        // クラスを付け外しして色を変える
+        if (res.liked) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
       }
-  
       btn.disabled = false;
-    }
+    }   
   </script>
 </body>
 </html>
