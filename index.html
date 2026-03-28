@@ -39,7 +39,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz1h0CL4f98RtDJL8B1ucwqP-zy7EhNmHAJS9QBMLLhApdygHgMaqQw-vy-JGrOMsTk/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxvHLB7Un7uljWTG8mM-YHDW7r9i_toWlmKAy80gVCtCooVIZUDSgsU4VUHDH2u20NG/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -57,7 +57,8 @@
     }
 
     async function loadTimeline() {
-      const posts = await callGas("fetchPosts", { parentId: "" });
+      const userId = document.getElementById('userId').value;
+      const posts = await callGas("fetchPosts", { parentId: "", userId: userId });
       const tl = document.getElementById('timeline');
       tl.innerHTML = '';
       posts.forEach(p => tl.appendChild(renderPost(p)));
@@ -68,28 +69,24 @@
       div.className = 'post-card';
   
       const postIdStr = String(p.post_id);
-      const safeContent = p.content ? String(p.content) : "";
+      
+      const activeClass = p.isLikedByMe ? "active" : "";
 
-      // 返信がある場合のみ「返信を表示」ボタンを作成
       const replyBtnHtml = p.replyCount > 0 
         ? `<button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示 (${p.replyCount})</button>`
         : "";
 
       div.innerHTML = `
-        <div class="post-header">
-          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
-          <span class="post-id">#${postIdStr}</span>
-        </div>
+        <div class="post-header">...</div>
         <div class="post-content">${md.render(safeContent)}</div>
         <div class="post-footer">
-          ${replyBtnHtml}
+          ${replyBtnHtml} 
           <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
-          <button class="secondary btn-like" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
+          <button class="secondary btn-like ${activeClass}" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
             ❤️ ${p.likeCount || 0}
           </button>
         </div>
-        <div id="reply-form-container-${postIdStr}"></div>
-        <div class="reply-container" id="replies-${postIdStr}"></div>
+        ...
       `;
       return div;
     }
