@@ -31,30 +31,25 @@
       padding: 5px;
       color: #888;
     }
-    .post-menu {
-      display: none;
-      position: absolute;
-      top: 35px;
-      right: 10px;
-      background: white;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      z-index: 100;
-      border-radius: 4px;
-      min-width: 150px;
-    }
     .post-menu button {
       display: block;
       width: 100%;
-      padding: 10px;
+      padding: 12px 15px;
       text-align: left;
-      background: none;
+      background: white !important;
+      color: #333 !important;
       border: none;
       border-bottom: 1px solid #eee;
       font-size: 13px;
       cursor: pointer;
+      font-weight: normal;
     }
-    .post-menu button:hover { background: #f5f5f5; }
+    .post-menu button:last-child {
+      border-bottom: none;
+    }
+    .post-menu button:hover {
+      background: #f5f5f5 !important;
+    }
   </style>
 </head>
 <body>
@@ -72,7 +67,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxeUBFnu6yr0ckSIPzrrL66BwM5Y2CarMmxkqJz6Y9P_55diDNDAPvRM5q16oNAvYhP/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzlvKBWE3fIyTtQKqJh1g6xCsWho2mmboA0gaYh2dvFNT_QIELrFh0kq6TsfQaletAn/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -120,7 +115,7 @@
 
       // まとめてHTMLを生成
       div.innerHTML = `
-        <div class="menu-trigger" onclick="toggleMenu('${postIdStr}')">⋮</div>
+        <div class="menu-trigger" style="font-size: 20px; font-weight: bold; line-height: 1;" onclick="toggleMenu('${postIdStr}')">⋮</div>
         <div class="post-menu" id="menu-${postIdStr}">
           <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
