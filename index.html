@@ -29,7 +29,7 @@ async function load() {
   const posts = json.data.posts;
   const replies = json.data.replies;
 
-  allReplies = replies; // ← ここに移動！！
+  allReplies = replies;
 
   const div = document.getElementById("posts");
   div.innerHTML = "";
@@ -160,7 +160,6 @@ function renderReplies(container, parent_id, depth = 1) {
   const children = getChildren(parent_id);
 
   children.forEach(child => {
-    // 親返信の下に表示
     const el = createReplyElement(child, depth);
     container.appendChild(el);
 
@@ -170,21 +169,28 @@ function renderReplies(container, parent_id, depth = 1) {
     const subChildren = getChildren(child.id);
 
     if (subChildren.length > 0) {
-      // 子返信用トグルボタン
-      const btn = document.createElement("button");
-      btn.innerText = `返信を表示 (${subChildren.length})`;
+      const btnId = "toggleBtn-" + child.id;
+      let btn = document.getElementById(btnId);
 
-      btn.onclick = () => {
-        if (subContainer.innerHTML) {
-          subContainer.innerHTML = "";
-          btn.innerText = `返信を表示 (${subChildren.length})`;
-        } else {
-          renderReplies(subContainer, child.id, depth + 1); // ← depth + 1
-          btn.innerText = `返信を非表示 (${subChildren.length})`;
-        }
-      };
+      if (!btn) {
+        btn = document.createElement("button");
+        btn.id = btnId;
+        btn.innerText = `返信を表示 (${subChildren.length})`;
 
-      container.appendChild(btn);
+        btn.onclick = () => {
+          openedReplies[child.id] = !openedReplies[child.id];
+
+          if (openedReplies[child.id]) {
+            renderReplies(subContainer, child.id, depth + 1);
+            btn.innerText = `返信を非表示 (${subChildren.length})`;
+          } else {
+            subContainer.innerHTML = "";
+            btn.innerText = `返信を表示 (${subChildren.length})`;
+          }
+        };
+
+        container.appendChild(btn);
+      }
     }
   });
 }
