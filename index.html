@@ -83,10 +83,10 @@
         <div class="post-content">${md.render(safeContent)}</div>
         <div class="post-footer">
           ${replyBtnHtml}
+          <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
           <button class="secondary btn-like" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
             ❤️ ${p.likeCount || 0}
-          </button> 
-          <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
+          </button>
         </div>
         <div id="reply-form-container-${postIdStr}"></div>
         <div class="reply-container" id="replies-${postIdStr}"></div>
