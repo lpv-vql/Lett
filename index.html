@@ -63,16 +63,18 @@
     function renderPost(p, isReply = false) {
       const div = document.createElement('div');
       div.className = 'post-card';
-      const depth = p.post_id.split('-').length;
+  
+      const postIdStr = String(p.post_id);
+      const depth = postIdStr.split('-').length;
 
       div.innerHTML = `
         <div class="post-header">
-          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
-          <span class="post-id">#${p.post_id}</span>
+        <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
+        <span class="post-id">#${postIdStr}</span>
         </div>
         <div class="post-content">${md.render(p.content)}</div>
-        <button class="secondary" id="btn-${p.post_id}" onclick="toggleReplies('${p.post_id}')">返信を表示</button>
-        <div class="reply-container" id="replies-${p.post_id}"></div>
+        <button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示</button>
+        <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
       return div;
     }
@@ -88,13 +90,16 @@
         container.innerHTML = '読み込み中...';
         container.style.display = 'block';
         btn.innerText = '返信を非表示';
-        
+    
         const replies = await callGas("fetchPosts", { parentId: postId });
         container.innerHTML = '';
-        const rootId = postId.split('-')[0];
+    
+        // ここも念のため String() を挟む
+        const rootId = String(postId).split('-')[0];
 
         replies.forEach(r => {
-          const depth = r.post_id.split('-').length;
+          const rIdStr = String(r.post_id);
+          const depth = rIdStr.split('-').length;
           if (depth >= 5) {
             const bar = document.createElement('div');
             bar.className = 'omission-bar';
