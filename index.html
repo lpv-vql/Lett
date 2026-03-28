@@ -36,7 +36,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxYjvx5xi1wOfU2cu5UKKmt3OCOrTEv5X5VacyqvkYYkbE-X6DoKiAfBk-cZmIq_nRx/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbymmWi0r-G-UkORf-NJgqf9IfvYoLQYT8yA-6WvQ_V7Ys7902I_-HS8gYWPELewihCh/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -67,6 +67,11 @@
       const postIdStr = String(p.post_id);
       const safeContent = p.content ? String(p.content) : "";
 
+      // 返信がある場合のみ「返信を表示」ボタンを作成
+      const replyBtnHtml = p.replyCount > 0 
+        ? `<button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示 (${p.replyCount})</button>`
+        : "";
+
       div.innerHTML = `
         <div class="post-header">
           <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
@@ -74,7 +79,7 @@
         </div>
         <div class="post-content">${md.render(safeContent)}</div>
         <div class="post-footer">
-          <button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示</button>
+          ${replyBtnHtml} 
           <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
         </div>
         <div id="reply-form-container-${postIdStr}"></div>
@@ -82,7 +87,7 @@
       `;
       return div;
     }
-
+    
     async function toggleReplies(postId) {
       const container = document.getElementById(`replies-${postId}`);
       const btn = document.getElementById(`btn-${postId}`);
