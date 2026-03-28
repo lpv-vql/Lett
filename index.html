@@ -101,23 +101,39 @@
     function renderPost(p, isReply = false) {
       const div = document.createElement('div');
       div.className = 'post-card';
+      // 外部アンカーリンク用にIDを付与
+      div.id = `post-${p.post_id}`;
   
       const postIdStr = String(p.post_id);
-      
       const safeContent = p.content ? String(p.content) : "";
-
       const activeClass = p.isLikedByMe ? "active" : "";
 
+      // 自分の投稿かどうかの判定（簡易版）
+      // 本来は generateHash が必要ですが、p.user_hash と比較するために
+      // 一旦ボタンの表示・非表示のロジックを整理します
+      const currentUserId = document.getElementById('userId').value;
+      
+      // 返信ボタンの表示判定
       const replyBtnHtml = p.replyCount > 0 
         ? `<button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示 (${p.replyCount})</button>`
         : "";
 
+      // まとめてHTMLを生成
       div.innerHTML = `
+        <div class="menu-trigger" onclick="toggleMenu('${postIdStr}')">⋮</div>
+        <div class="post-menu" id="menu-${postIdStr}">
+          <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
+          <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
+          <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
+          <button onclick="repost('${postIdStr}')">リポスト</button>
+          <button id="hide-btn-${postIdStr}" style="display:none; color:red;" onclick="toggleHide('${postIdStr}')">表示/非表示</button>
+        </div>
+
         <div class="post-header">
           <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
           <span class="post-id">#${postIdStr}</span>
         </div>
-        <div class="post-content">${md.render(safeContent)}</div>
+        <div class="post-content">${parseContent(safeContent)}</div>
         <div class="post-footer">
           ${replyBtnHtml} 
           <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
@@ -128,25 +144,7 @@
         <div id="reply-form-container-${postIdStr}"></div>
         <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
-      return div;
 
-      const userHash = generateHash(document.getElementById('userId').value);
-      const isMyPost = (p.user_hash === userHash); // 自分の投稿か判定
-
-      div.innerHTML = `
-        <div class="menu-trigger" onclick="toggleMenu('${postIdStr}')">⋮</div>
-        <div class="post-menu" id="menu-${postIdStr}">
-          <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
-          <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
-          <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
-          <button onclick="repost('${postIdStr}')">リポスト</button>
-          ${isMyPost ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">表示/非表示</button>` : ''}
-        </div>
-        
-        <div class="post-header">...</div>
-        <div class="post-content">${parseContent(safeContent)}</div> 
-        ...
-      `;
       return div;
     }
     
@@ -334,6 +332,42 @@
           el.innerHTML = `<div class="quote-card-error">投稿が見つかりません (#${id})</div>`;
         }
       }
+    }
+
+    // メニューの開閉
+    function toggleMenu(postId) {
+      const menu = document.getElementById(`menu-${postId}`);
+      const isVisible = menu.style.display === 'block';
+      
+      // 全てのメニューを一旦閉じる
+      document.querySelectorAll('.post-menu').forEach(m => m.style.display = 'none');
+      
+      // クリックされたものだけ開く
+      menu.style.display = isVisible ? 'none' : 'block';
+      
+      // 画面のどこかをクリックしたらメニューを閉じる設定
+      if (!isVisible) {
+        setTimeout(() => {
+          window.onclick = () => {
+            menu.style.display = 'none';
+            window.onclick = null;
+          };
+        }, 10);
+      }
+    }
+
+    // 埋め込みリンクのコピー
+    function copyToEmbed(postId) {
+      const text = `lett/post/${postId}`;
+      navigator.clipboard.writeText(text);
+      alert("埋め込みリンクをコピーしました: " + text);
+    }
+
+    // 外部用リンクのコピー
+    function copyToExternal(postId) {
+      const url = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+      navigator.clipboard.writeText(url);
+      alert("外部用リンクをコピーしました");
     }
   </script>
 </body>
