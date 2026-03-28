@@ -39,7 +39,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxvHLB7Un7uljWTG8mM-YHDW7r9i_toWlmKAy80gVCtCooVIZUDSgsU4VUHDH2u20NG/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxeUBFnu6yr0ckSIPzrrL66BwM5Y2CarMmxkqJz6Y9P_55diDNDAPvRM5q16oNAvYhP/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -59,6 +59,7 @@
     async function loadTimeline() {
       const userId = document.getElementById('userId').value;
       const posts = await callGas("fetchPosts", { parentId: "", userId: userId });
+  
       const tl = document.getElementById('timeline');
       tl.innerHTML = '';
       posts.forEach(p => tl.appendChild(renderPost(p)));
