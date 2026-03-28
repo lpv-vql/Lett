@@ -15,7 +15,7 @@
     .btn-like:hover { background: #fff0f0; border-color: #ffbaba; }
     .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; }
-    .post-header { font-size: 15px; color: #777; margin-bottom: 5px; }
+    .post-header { font-size: 13px; color: #777; margin-bottom: 5px; }
     .user-name { font-weight: bold; color: #333; }
     .post-id { background: #f4f4f4; padding: 2px 4px; }
     .reply-container { border-left: 2px solid #eee; margin-left: 10px; padding-left: 10px; display: none; }
@@ -104,38 +104,19 @@
 
       if (container.style.display === 'block') {
         container.style.display = 'none';
-        btn.innerText = '返信を表示';
+        if (btn) btn.innerText = '返信を表示';
       } else {
         container.innerHTML = '読み込み中...';
         container.style.display = 'block';
-        btn.innerText = '返信を非表示';
+        if (btn) btn.innerText = '返信を非表示';
     
         const userId = document.getElementById('userId').value;
         const replies = await callGas("fetchPosts", { parentId: postId, userId: userId });
         
-        container.innerHTML = '';
-    
-        // ここも念のため String() を挟む
-        const rootId = String(postId).split('-')[0];
-
-        replies.forEach(r => {
-          const rIdStr = String(r.post_id);
-          const depth = rIdStr.split('-').length;
-          if (depth >= 5) {
-            const bar = document.createElement('div');
-            bar.className = 'omission-bar';
-            bar.innerText = `-- 階層省略 (Root:#${rootId}) --`;
-            container.appendChild(bar);
-            const el = renderPost(r, true);
-            el.classList.add('omitted');
-            container.appendChild(el);
-          } else {
-            container.appendChild(renderPost(r, true));
-          }
-        });
+        renderReplyList(postId, replies); // ここで共通関数を使う
       }
     }
-
+    
     async function submitPost(btn) { // 引数 btn を追加
       if (!btn) btn = document.querySelector('button'); 
 
@@ -188,11 +169,12 @@
 
     async function submitReply(parentId) {
       const contentField = document.getElementById(`reply-content-${parentId}`);
+      const container = document.getElementById(`replies-${parentId}`);
       const data = {
         displayName: document.getElementById('displayName').value,
         userId: document.getElementById('userId').value,
         content: contentField.value,
-        parentId: parentId  // ここで親IDを指定！
+        parentId: parentId
       };
 
       if (!data.content.trim()) return alert("内容を入力してください");
@@ -200,13 +182,48 @@
       try {
         await callGas("addNewPost", data);
         document.getElementById(`reply-form-container-${parentId}`).innerHTML = ""; // フォームを閉じる
-        // 返信一覧を再読み込み
-        const container = document.getElementById(`replies-${parentId}`);
-        container.style.display = 'none'; // 一旦閉じてから再表示
-        toggleReplies(parentId); 
+        
+        // --- 修正ポイント：返信エリアの状態をリセットして強制読み込み ---
+        container.style.display = 'block'; // 強制的に表示状態にする
+        container.innerHTML = '読み込み中...';
+        
+        // 再読み込み処理を直接実行
+        const userId = document.getElementById('userId').value;
+        const replies = await callGas("fetchPosts", { parentId: parentId, userId: userId });
+        
+        renderReplyList(parentId, replies); // 新しく作る描画専用関数
+        
+        // 親投稿の「返信を表示」ボタンの数字を更新するために全体をリロードしても良いですが、
+        // 重いので今回はその場だけ更新します
+        const btn = document.getElementById(`btn-${parentId}`);
+        if(btn) btn.innerText = `返信を非表示`; 
+
       } catch (e) {
+        console.error(e);
         alert("送信に失敗しました");
       }
+    }
+
+    function renderReplyList(parentId, replies) {
+      const container = document.getElementById(`replies-${parentId}`);
+      container.innerHTML = '';
+      const rootId = String(parentId).split('-')[0];
+
+      replies.forEach(r => {
+        const rIdStr = String(r.post_id);
+        const depth = rIdStr.split('-').length;
+        if (depth >= 5) {
+          const bar = document.createElement('div');
+          bar.className = 'omission-bar';
+          bar.innerText = `-- 階層省略 (Root:#${rootId}) --`;
+          container.appendChild(bar);
+          const el = renderPost(r, true);
+          el.classList.add('omitted');
+          container.appendChild(el);
+        } else {
+          container.appendChild(renderPost(r, true));
+        }
+      });
     }
 
     async function handleLike(postId, btn) {
@@ -220,7 +237,6 @@
         const currentCount = parseInt(btn.innerText.replace('❤️ ', ''));
         btn.innerText = `❤️ ${res.liked ? currentCount + 1 : currentCount - 1}`;
     
-        // クラスを付け外しして色を変える
         if (res.liked) {
           btn.classList.add('active');
         } else {
