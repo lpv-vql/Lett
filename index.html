@@ -71,6 +71,8 @@
   
       const postIdStr = String(p.post_id);
       
+      const safeContent = p.content ? String(p.content) : "";
+
       const activeClass = p.isLikedByMe ? "active" : "";
 
       const replyBtnHtml = p.replyCount > 0 
@@ -78,7 +80,10 @@
         : "";
 
       div.innerHTML = `
-        <div class="post-header">...</div>
+        <div class="post-header">
+          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
+          <span class="post-id">#${postIdStr}</span>
+        </div>
         <div class="post-content">${md.render(safeContent)}</div>
         <div class="post-footer">
           ${replyBtnHtml} 
@@ -87,7 +92,8 @@
             ❤️ ${p.likeCount || 0}
           </button>
         </div>
-        ...
+        <div id="reply-form-container-${postIdStr}"></div>
+        <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
       return div;
     }
