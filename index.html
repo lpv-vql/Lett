@@ -65,8 +65,6 @@
       div.className = 'post-card';
   
       const postIdStr = String(p.post_id);
-      const depth = postIdStr.split('-').length;
-
       const safeContent = p.content ? String(p.content) : "";
 
       div.innerHTML = `
@@ -75,7 +73,11 @@
           <span class="post-id">#${postIdStr}</span>
         </div>
         <div class="post-content">${md.render(safeContent)}</div>
-        <button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示</button>
+        <div class="post-footer">
+          <button class="secondary" id="btn-${postIdStr}" onclick="toggleReplies('${postIdStr}')">返信を表示</button>
+          <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
+        </div>
+        <div id="reply-form-container-${postIdStr}"></div>
         <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
       return div;
@@ -146,6 +148,47 @@
       } finally {
         btn.disabled = false;
         btn.innerText = originalText;
+      }
+    }
+    
+    function showReplyForm(parentId, btn) {
+      const container = document.getElementById(`reply-form-container-${parentId}`);
+      
+      // 既に入力欄がある場合は消す（トグル）
+      if (container.innerHTML !== "") {
+        container.innerHTML = "";
+        return;
+      }
+
+      // 返信フォームのHTMLを生成
+      container.innerHTML = `
+        <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa;">
+          <textarea id="reply-content-${parentId}" rows="2" placeholder="#${parentId} への返信を書く" style="width:100%; margin-bottom:5px;"></textarea>
+          <button class="secondary" style="width:100%; background:#333; color:#fff;" onclick="submitReply('${parentId}')">返信を送信</button>
+        </div>
+      `;
+    }
+
+    async function submitReply(parentId) {
+      const contentField = document.getElementById(`reply-content-${parentId}`);
+      const data = {
+        displayName: document.getElementById('displayName').value,
+        userId: document.getElementById('userId').value,
+        content: contentField.value,
+        parentId: parentId  // ここで親IDを指定！
+      };
+
+      if (!data.content.trim()) return alert("内容を入力してください");
+
+      try {
+        await callGas("addNewPost", data);
+        document.getElementById(`reply-form-container-${parentId}`).innerHTML = ""; // フォームを閉じる
+        // 返信一覧を再読み込み
+        const container = document.getElementById(`replies-${parentId}`);
+        container.style.display = 'none'; // 一旦閉じてから再表示
+        toggleReplies(parentId); 
+      } catch (e) {
+        alert("送信に失敗しました");
       }
     }
   </script>
