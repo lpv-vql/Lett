@@ -11,6 +11,8 @@
     input, textarea, button { border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
     button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; }
     button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
+    button.secondary { transition: all 0.2s; }
+    button.secondary:active { transform: scale(0.9); /* 押した時に少し凹む演出 */ }
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; }
     .post-header { font-size: 12px; color: #777; margin-bottom: 5px; }
     .user-name { font-weight: bold; color: #333; }
@@ -36,7 +38,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbws9OLyyDHCdF-aT2EvRuzj2jvvEoeTq16DXZpI_y_ntQglkxUTi3b990Pj7Je2WQKb/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxOqaYur48QDsKWjDGFKgxwXoGR2Gr8EMYIbz0IHqk8exdpdezAz-gi0WQIXqE-eB3Z/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -82,6 +84,9 @@
           ${replyBtnHtml} 
           <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
         </div>
+        <button class="secondary" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
+          ❤️ ${p.likeCount || 0}
+        </button>
         <div id="reply-form-container-${postIdStr}"></div>
         <div class="reply-container" id="replies-${postIdStr}"></div>
       `;
@@ -195,6 +200,24 @@
       } catch (e) {
         alert("送信に失敗しました");
       }
+    }
+
+    async function handleLike(postId, btn) {
+      const userId = document.getElementById('userId').value;
+      if (!userId) return alert("いいねするには秘密コードが必要です");
+
+      // 連打防止
+      btn.disabled = true;
+
+      const res = await callGas("toggleLike", { postId, userId });
+      if (res.success) {
+        // 本来は再読み込みすべきですが、とりあえず数字を仮で増減させて反応を出す
+        const currentCount = parseInt(btn.innerText.replace('❤️ ', ''));
+        btn.innerText = `❤️ ${res.liked ? currentCount + 1 : currentCount - 1}`;
+        btn.style.color = res.liked ? "#e0245e" : "#333"; // いいね中は赤くする
+      }
+  
+      btn.disabled = false;
     }
   </script>
 </body>
