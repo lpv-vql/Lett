@@ -1,87 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Minimal SNS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.css">
   <style>
-    /* デザイン：白地・角丸小さめ・シンプル */
     body { font-family: sans-serif; background: #fff; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
     .container { max-width: 600px; margin: 0 auto; }
-    input, textarea, button { 
-      border: 1px solid #ddd; border-radius: 2px; padding: 8px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px;
-    }
+    input, textarea, button { border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
     button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; }
-    button:hover { background: #555; }
-    button.secondary { background: #eee; color: #333; margin-top: 5px; width: auto; font-size: 12px; }
-
-    /* 投稿カード */
+    button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; }
     .post-header { font-size: 12px; color: #777; margin-bottom: 5px; }
     .user-name { font-weight: bold; color: #333; }
-    .post-id { background: #f4f4f4; padding: 2px 4px; margin-left: 5px; }
-    .post-content { font-size: 15px; }
-    .post-content img { max-width: 100%; height: auto; border-radius: 2px; }
-
-    /* インデントと省略 */
-    .reply-container { border-left: 1px solid #eee; margin-left: 15px; padding-left: 10px; display: none; }
-    .omission-bar { font-size: 11px; color: #aaa; text-align: center; margin: 10px 0; border-top: 1px dashed #eee; position: relative; }
-    .omitted-content { margin-left: 0 !important; } /* 省略時は左に戻す */
-
-    .form-group { display: flex; gap: 10px; }
-    .form-group input { flex: 1; }
+    .post-id { background: #f4f4f4; padding: 2px 4px; }
+    .reply-container { border-left: 2px solid #eee; margin-left: 10px; padding-left: 10px; display: none; }
+    .omission-bar { font-size: 11px; color: #aaa; text-align: center; margin: 10px 0; border-top: 1px dashed #eee; }
+    .omitted { margin-left: 0 !important; border-left: none; }
+    .form-row { display: flex; gap: 10px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Simple SNS</h2>
-    
-    <div id="post-form">
-      <div class="form-group">
-        <input type="text" id="displayName" placeholder="表示名" required>
-        <input type="password" id="userId" placeholder="秘密のコード" required>
+    <div id="editor">
+      <div class="form-row">
+        <input type="text" id="displayName" placeholder="表示名">
+        <input type="password" id="userId" placeholder="秘密コード">
       </div>
-      <textarea id="content" rows="3" placeholder="今なにしてる？ (Markdown対応)" required></textarea>
+      <textarea id="content" rows="3" placeholder="今なにしてる？"></textarea>
       <button onclick="submitPost()">投稿する</button>
     </div>
-
-    <hr>
     <div id="timeline">読み込み中...</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxYjvx5xi1wOfU2cu5UKKmt3OCOrTEv5X5VacyqvkYYkbE-X6DoKiAfBk-cZmIq_nRx/exec";
     const md = window.markdownit();
-    
-    // 起動時にLocalStorageから読み込み
+
     window.onload = () => {
       document.getElementById('displayName').value = localStorage.getItem('displayName') || '';
       document.getElementById('userId').value = localStorage.getItem('userId') || '';
       loadTimeline();
     };
 
-    // タイムライン（親投稿）取得
-    function loadTimeline() {
-      google.script.run.withSuccessHandler(posts => {
-        const tl = document.getElementById('timeline');
-        tl.innerHTML = '';
-        posts.forEach(p => tl.appendChild(createPostElement(p)));
-      }).fetchPosts("");
+    async function callGas(method, data) {
+      const response = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ method, data })
+      });
+      return await response.json();
     }
 
-    // 投稿要素の作成
-    function createPostElement(p, isReply = false) {
+    async function loadTimeline() {
+      const posts = await callGas("fetchPosts", { parentId: "" });
+      const tl = document.getElementById('timeline');
+      tl.innerHTML = '';
+      posts.forEach(p => tl.appendChild(renderPost(p)));
+    }
+
+    function renderPost(p, isReply = false) {
       const div = document.createElement('div');
-      div.className = isReply ? 'post-card reply-item' : 'post-card';
-      div.id = 'post-' + p.post_id;
-      
+      div.className = 'post-card';
       const depth = p.post_id.split('-').length;
 
       div.innerHTML = `
         <div class="post-header">
-          <span class="user-name">${p.display_name}</span>
-          <span class="user-hash">ID:${p.user_hash}</span>
+          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
           <span class="post-id">#${p.post_id}</span>
-          <span class="time">${new Date(p.timestamp).toLocaleString()}</span>
         </div>
         <div class="post-content">${md.render(p.content)}</div>
         <button class="secondary" id="btn-${p.post_id}" onclick="toggleReplies('${p.post_id}')">返信を表示</button>
@@ -90,8 +77,7 @@
       return div;
     }
 
-    // 返信の表示・非表示（トグル）
-    function toggleReplies(postId) {
+    async function toggleReplies(postId) {
       const container = document.getElementById(`replies-${postId}`);
       const btn = document.getElementById(`btn-${postId}`);
 
@@ -103,49 +89,40 @@
         container.style.display = 'block';
         btn.innerText = '返信を非表示';
         
-        google.script.run.withSuccessHandler(replies => {
-          container.innerHTML = '';
-          const rootId = postId.split('-')[0];
-          
-          replies.forEach(r => {
-            const depth = r.post_id.split('-').length;
-            
-            // スマート省略ロジック：5階層目以上の場合
-            if (depth >= 5) {
-              const omBar = document.createElement('div');
-              omBar.className = 'omission-bar';
-              omBar.innerText = `-- 階層が深いため省略 (Root:#${rootId}) --`;
-              container.appendChild(omBar);
-              
-              const replyEl = createPostElement(r, true);
-              replyEl.classList.add('omitted-content'); // 左に寄せる
-              container.appendChild(replyEl);
-            } else {
-              container.appendChild(createPostElement(r, true));
-            }
-          });
-        }).fetchPosts(postId);
+        const replies = await callGas("fetchPosts", { parentId: postId });
+        container.innerHTML = '';
+        const rootId = postId.split('-')[0];
+
+        replies.forEach(r => {
+          const depth = r.post_id.split('-').length;
+          if (depth >= 5) {
+            const bar = document.createElement('div');
+            bar.className = 'omission-bar';
+            bar.innerText = `-- 階層省略 (Root:#${rootId}) --`;
+            container.appendChild(bar);
+            const el = renderPost(r, true);
+            el.classList.add('omitted');
+            container.appendChild(el);
+          } else {
+            container.appendChild(renderPost(r, true));
+          }
+        });
       }
     }
 
-    // 投稿送信
-    function submitPost() {
+    async function submitPost() {
       const data = {
         displayName: document.getElementById('displayName').value,
         userId: document.getElementById('userId').value,
         content: document.getElementById('content').value,
-        parentId: "" // 今回は新規投稿のみ。返信UIは別途拡張可能。
+        parentId: "" 
       };
-
-      if(!data.displayName || !data.userId || !data.content) return alert("入力してください");
-
       localStorage.setItem('displayName', data.displayName);
       localStorage.setItem('userId', data.userId);
-
-      google.script.run.withSuccessHandler(() => {
-        document.getElementById('content').value = '';
-        loadTimeline();
-      }).addNewPost(data);
+      
+      await callGas("addNewPost", data);
+      document.getElementById('content').value = '';
+      loadTimeline();
     }
   </script>
 </body>
