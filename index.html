@@ -159,46 +159,48 @@ function createReplyElement(r, depth) {
 function renderReplies(container, parent_id, depth = 1) {
   const children = getChildren(parent_id);
 
+  // ===== 直線チェーン検出 =====
   if (children.length === 1) {
-    let chain = [];
-    let current = children[0];
+    const chain = getChain(parent_id);
 
-    // 直線チェーンを集める
-    while (current) {
-      chain.push(current);
-      const next = getChildren(current.id);
-      if (next.length !== 1) break;
-      current = next[0];
+    if (chain.length >= 3) {
+      // 最初は省略
+      const skip = document.createElement("div");
+      skip.style.marginLeft = Math.min(depth, 2) * 20 + "px";
+      skip.innerHTML = "(省略)";
+      container.appendChild(skip);
+
+      // 最後2個だけ表示
+      const last1 = chain[chain.length - 2];
+      const last2 = chain[chain.length - 1];
+
+      container.appendChild(createReplyElement(last1, depth));
+      container.appendChild(createReplyElement(last2, depth + 1));
+
+      return;
     }
 
-    if (chain.length > 2) {
-      // 先頭
-      container.appendChild(createReplyElement(chain[0], depth));
+    // 短い場合は普通に全部表示
+    let current = parent_id;
+    let d = depth;
 
-      // 途中省略
-      const skipEl = document.createElement("div");
-      skipEl.style.marginLeft = Math.min(depth, 2) * 20 + "px";
-      skipEl.innerHTML = "<i>(省略)</i>";
-      container.appendChild(skipEl);
+    while (true) {
+      const c = getChildren(current);
+      if (c.length !== 1) break;
 
-      // 末尾
-      container.appendChild(createReplyElement(chain[chain.length - 1], depth));
-    } else {
-      // 2個以下なら全部表示
-      chain.forEach(r => {
-        container.appendChild(createReplyElement(r, depth));
-      });
+      const r = c[0];
+      container.appendChild(createReplyElement(r, d));
+
+      current = r.id;
+      d++;
     }
 
-    // 最後の子の下に再帰
-    if (current) {
-      renderReplies(container, current.id, depth + 1);
-    }
-
+    // 分岐が出たら続き
+    renderReplies(container, current, d);
     return;
   }
 
-  // 分岐がある場合
+  // ===== 分岐あり =====
   children.forEach(child => {
     const el = createReplyElement(child, depth);
     container.appendChild(el);
@@ -207,6 +209,7 @@ function renderReplies(container, parent_id, depth = 1) {
     container.appendChild(sub);
 
     const subChildren = getChildren(child.id);
+
     if (subChildren.length > 0) {
       const btn = document.createElement("button");
       btn.innerText = `返信を表示 (${subChildren.length})`;
