@@ -73,14 +73,14 @@
   </style>
 </head>
 <body>
-  <div id="search-area" style="margin-bottom:10px;">
-    <input type="text" id="search-input" placeholder="ワード検索..." onkeydown="if(event.key==='Enter') execSearch()">
-    <div id="filter-display" style="display:none; margin-top:5px; font-size:0.9em; color:#007bff;">
-      <span id="filter-text"></span>
-      <button onclick="clearFilter()" style="padding:2px 5px; margin-left:10px;">解除</button>
-    </div>
-  </div>
   <div class="container">
+    <div id="search-area" style="margin-bottom:10px;">
+      <input type="text" id="search-input" placeholder="ワード検索..." onkeydown="if(event.key==='Enter') execSearch()">
+      <div id="filter-display" style="display:none; margin-top:5px; font-size:0.9em; color:#007bff;">
+        <span id="filter-text"></span>
+        <button onclick="clearFilter()" style="padding:2px 5px; margin-left:10px;">解除</button>
+      </div>
+    </div>
     <div id="editor">
       <div class="form-row">
         <input type="text" id="displayName" placeholder="表示名">
