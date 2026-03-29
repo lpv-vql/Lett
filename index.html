@@ -17,7 +17,7 @@
     .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
     
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; position: relative; }
-    .post-card.hidden-post { opacity: 0.5; background: #f9f9f9; } /* 非表示投稿のスタイル */
+    .post-card.hidden-post { opacity: 0.5; background: #f9f9f9; }
     
     .repost-label { font-size: 11px; color: #5cb85c; font-weight: bold; margin-bottom: 5px; }
     .post-header { font-size: 13px; color: #777; margin-bottom: 5px; }
@@ -41,7 +41,6 @@
     }
     .post-menu button:hover { background: #f5f5f5 !important; }
 
-    /* 引用カード */
     .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9em; }
     .quote-header { display: flex; justify-content: space-between; color: #666; font-size: 0.85em; margin-bottom: 5px; }
   </style>
@@ -61,7 +60,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxDGZ19BcxYgSxODhGtb9DZdDz0eYq9W4LI00WvuFEU-YOdbxIcDDzxIMGRWHylBkkT/exec";
+    const GAS_URL = "ここに新しいデプロイURLを貼る"; 
     const md = window.markdownit();
 
     window.onload = () => {
@@ -94,9 +93,7 @@
 
       const postIdStr = String(p.post_id);
       const activeClass = p.isLikedByMe ? "active" : "";
-      
-      // リポストラベル
-      const repostHtml = p.is_repost ? `<div class="repost-label">ID:${p.reposter_hash} によるリポスト</div>` : "";
+      const repostHtml = p.is_repost ? `<div class="repost-label">♻️ リポスト済 (ID:${p.reposter_hash})</div>` : "";
 
       div.innerHTML = `
         ${repostHtml}
@@ -128,36 +125,67 @@
       return div;
     }
 
-    // --- 各種機能関数 ---
+    async function toggleReplies(postId) {
+      const container = document.getElementById(`replies-${postId}`);
+      const btn = document.getElementById(`btn-${postId}`);
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+        if (btn) btn.innerText = `返信を表示`;
+      } else {
+        container.innerHTML = '読み込み中...';
+        container.style.display = 'block';
+        if (btn) btn.innerText = `返信を非表示`;
+        const userId = document.getElementById('userId').value;
+        const replies = await callGas("fetchPosts", { parentId: postId, userId: userId });
+        renderReplyList(postId, replies);
+      }
+    }
 
-    async function executeRepost(postId) {
+    function renderReplyList(parentId, replies) {
+      const container = document.getElementById(`replies-${parentId}`);
+      container.innerHTML = '';
+      replies.forEach(r => container.appendChild(renderPost(r, true)));
+    }
+
+    function showReplyForm(parentId, btn) {
+      const container = document.getElementById(`reply-form-container-${parentId}`);
+      if (container.innerHTML !== "") { container.innerHTML = ""; return; }
+      container.innerHTML = `
+        <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa;">
+          <textarea id="reply-content-${parentId}" rows="2" placeholder="#${parentId} への返信" style="width:100%; margin-bottom:5px;"></textarea>
+          <button class="secondary" style="width:100%; background:#333; color:#fff;" onclick="submitReply('${parentId}')">返信を送信</button>
+        </div>`;
+    }
+
+    async function submitReply(parentId) {
+      const contentField = document.getElementById(`reply-content-${parentId}`);
+      const data = {
+        displayName: document.getElementById('displayName').value,
+        userId: document.getElementById('userId').value,
+        content: contentField.value,
+        parentId: parentId
+      };
+      if (!data.content.trim()) return;
+      await callGas("addNewPost", data);
+      document.getElementById(`reply-form-container-${parentId}`).innerHTML = "";
+      const userId = document.getElementById('userId').value;
+      const replies = await callGas("fetchPosts", { parentId: parentId, userId: userId });
+      renderReplyList(parentId, replies);
+    }
+
+    async function handleLike(postId, btn) {
       const userId = document.getElementById('userId').value;
       if (!userId) return alert("秘密コードが必要です");
-      if (!confirm("この投稿をリポスト（再放流）しますか？")) return;
-
-      const res = await callGas("doRepost", { postId, userId });
+      btn.disabled = true;
+      const res = await callGas("toggleLike", { postId, userId });
       if (res.success) {
-        alert("リポストしました！");
-        loadTimeline();
+        const currentCount = parseInt(btn.innerText.replace('❤️ ', ''));
+        btn.innerText = `❤️ ${res.liked ? currentCount + 1 : currentCount - 1}`;
+        res.liked ? btn.classList.add('active') : btn.classList.remove('active');
       }
+      btn.disabled = false;
     }
 
-    async function toggleHide(postId) {
-      const userId = document.getElementById('userId').value;
-      const res = await callGas("toggleVisibility", { postId, userId });
-      if (res.success) {
-        loadTimeline();
-      }
-    }
-
-    function prepareQuote(postId) {
-      const contentField = document.getElementById('content');
-      const tag = `lett/post/${postId}`;
-      contentField.value = contentField.value.trim() ? contentField.value + "\n\n" + tag : tag + "\n";
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      contentField.focus();
-    }
-    
     async function submitPost(btn) {
       const contentField = document.getElementById('content');
       const data = {
@@ -176,19 +204,33 @@
       loadTimeline();
     }
 
+    async function executeRepost(postId) {
+      const userId = document.getElementById('userId').value;
+      if (!userId) return alert("秘密コードが必要です");
+      if (!confirm("リポスト（再放流）しますか？")) return;
+      const res = await callGas("doRepost", { postId, userId });
+      if (res.success) { loadTimeline(); }
+    }
+
+    async function toggleHide(postId) {
+      const userId = document.getElementById('userId').value;
+      await callGas("toggleVisibility", { postId, userId });
+      loadTimeline();
+    }
+
     function toggleMenu(postId) {
       const menu = document.getElementById(`menu-${postId}`);
       const isVisible = menu.style.display === 'block';
       document.querySelectorAll('.post-menu').forEach(m => m.style.display = 'none');
       menu.style.display = isVisible ? 'none' : 'block';
       if (!isVisible) {
-        setTimeout(() => { window.onclick = () => { menu.style.display = 'none'; window.onclick = null; }; }, 10);
+        setTimeout(() => { window.onclick = (e) => { if(!menu.contains(e.target)){ menu.style.display = 'none'; window.onclick = null; } }; }, 10);
       }
     }
 
     function parseContent(content) {
       let html = md.render(content);
-      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => `<div class="embedded-post" data-embed-id="${id}">読み込み中... (#${id})</div>`);
+      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`);
       setTimeout(() => loadEmbeds(), 100);
       return html;
     }
@@ -201,21 +243,23 @@
         const posts = await callGas("fetchPosts", { parentId: "", userId: "", postId: id });
         if (posts && posts.length > 0) {
           const p = posts[0];
-          el.innerHTML = `
-            <div class="quote-card">
-              <div class="quote-header"><span>${p.display_name}</span><span>#${p.post_id}</span></div>
-              <div class="quote-content">${md.render(p.content || "")}</div>
-            </div>`;
+          el.innerHTML = `<div class="quote-card"><div class="quote-header"><span>${p.display_name}</span><span>#${p.post_id}</span></div><div class="quote-content">${md.render(p.content || "")}</div></div>`;
         } else {
           el.innerHTML = `<div class="quote-card-error">引用元が見つかりません</div>`;
         }
       }
     }
 
+    function prepareQuote(postId) {
+      const contentField = document.getElementById('content');
+      const tag = `lett/post/${postId}`;
+      contentField.value = contentField.value.trim() ? contentField.value + "\n\n" + tag : tag;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      contentField.focus();
+    }
+
     function copyToEmbed(postId) { navigator.clipboard.writeText(`lett/post/${postId}`); alert("コピーしました"); }
     function copyToExternal(postId) { navigator.clipboard.writeText(`${window.location.href.split('#')[0]}#post-${postId}`); alert("URLをコピーしました"); }
-    
-    // (submitReply, renderReplyList, showReplyFormなどは以前のものをそのまま維持)
   </script>
 </body>
 </html>
