@@ -60,7 +60,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "ここに新しいデプロイURLを貼る"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxDGZ19BcxYgSxODhGtb9DZdDz0eYq9W4LI00WvuFEU-YOdbxIcDDzxIMGRWHylBkkT/exec"; 
     const md = window.markdownit();
 
     window.onload = () => {
@@ -93,7 +93,7 @@
 
       const postIdStr = String(p.post_id);
       const activeClass = p.isLikedByMe ? "active" : "";
-      const repostHtml = p.is_repost ? `<div class="repost-label">♻️ リポスト済 (ID:${p.reposter_hash})</div>` : "";
+      const repostHtml = p.is_repost ? `<div class="repost-label">ID:${p.reposter_hash} によるリポスト</div>` : "";
 
       div.innerHTML = `
         ${repostHtml}
