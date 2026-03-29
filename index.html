@@ -42,7 +42,9 @@
     .post-menu button:hover { background: #f5f5f5 !important; }
 
     .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-size: 0.9em; }
-    .quote-header { display: flex; color: #666; font-size: 0.85em; margin-bottom: 5px; }
+    .quote-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 5px; color: #666; font-size: 0.85em; gap: 5px; }
+    .quote-content { color: #333; word-break: break-all; }
+    .quote-content p { margin: 2px 0; }
   </style>
 </head>
 <body>
@@ -240,12 +242,26 @@
       for (const el of embeds) {
         const id = el.dataset.embedId;
         el.classList.add('loaded');
+        
         const posts = await callGas("fetchPosts", { parentId: "", userId: "", postId: id });
+        
         if (posts && posts.length > 0) {
           const p = posts[0];
-          el.innerHTML = `<div class="quote-card"><div class="quote-header"><span>${p.display_name}</span><span>#${p.post_id}</span></div><div class="quote-content">${md.render(p.content || "")}</div></div>`;
+          // Markdownを適用
+          const renderedContent = md.render(p.content || "");
+          
+          el.innerHTML = `
+            <div class="quote-card" onclick="location.href='#post-${p.post_id}'">
+              <div class="quote-header">
+                <span class="user-name">${p.display_name}</span> 
+                <span style="margin-left:5px;">ID:${p.user_hash}</span>
+                <span class="post-id" style="margin-left:5px;">#${p.post_id}</span>
+              </div>
+              <div class="quote-content">${renderedContent}</div>
+            </div>
+          `;
         } else {
-          el.innerHTML = `<div class="quote-card-error">引用元が見つかりません</div>`;
+          el.innerHTML = `<div class="quote-card-error">引用元の投稿が見つかりません (#${id})</div>`;
         }
       }
     }
