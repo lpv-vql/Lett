@@ -111,7 +111,7 @@
         <div class="post-header">
           <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
           <span class="post-id">#${postIdStr}</span>
-          ${p.is_hidden === "TRUE" ? " <small>[非表示中]</small>" : ""}
+          ${p.is_hidden === "TRUE" ? " <small>(非表示)</small>" : ""}
         </div>
         <div class="post-content">${parseContent(p.content || "")}</div>
         <div class="post-footer">
