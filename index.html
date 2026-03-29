@@ -91,7 +91,10 @@
       const div = document.createElement('div');
       div.className = 'post-card';
       if (p.is_hidden === "TRUE") div.classList.add('hidden-post');
-      div.id = `post-${p.post_id}`;
+  
+      // リポストでもIDがぶつからないようにユニークキーを作成
+      const uniqueKey = p.is_repost ? `rp-${p.post_id}-${new Date(p.timestamp).getTime()}` : p.post_id;
+      div.id = `card-${uniqueKey}`; 
 
       const postIdStr = String(p.post_id);
       const activeClass = p.isLikedByMe ? "active" : "";
@@ -99,125 +102,110 @@
 
       div.innerHTML = `
         ${repostHtml}
-        <div class="menu-trigger" style="font-size: 22px; padding: 0 10px;" onclick="toggleMenu('${postIdStr}')">⋮</div>
-        <div class="post-menu" id="menu-${postIdStr}">
+        <div class="menu-trigger" style="font-size: 22px; padding: 0 10px;" onclick="toggleMenu('${uniqueKey}')">⋮</div>
+        <div class="post-menu" id="menu-${uniqueKey}">
           <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
           <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
           <button onclick="executeRepost('${postIdStr}')">リポスト</button>
-          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">${p.is_hidden === 'TRUE' ? '表示する' : '非表示にする'}</button>` : ''}
+          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">${p.is_hidden === 'TRUE' ? '表示に戻す' : '表示/非表示'}</button>` : ''}
         </div>
 
         <div class="post-header">
-          <span class="user-name">${p.display_name}</span> ID:${p.user_hash} 
-          <span class="post-id">#${postIdStr}</span>
-          ${p.is_hidden === "TRUE" ? " <small>(非表示)</small>" : ""}
+          <span class="user-name">${p.display_name}</span> 
+          <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
+          <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
+          ${p.is_hidden === "TRUE" ? " <small style='color:red;'>[非表示中]</small>" : ""}
         </div>
         <div class="post-content">${parseContent(p.content || "")}</div>
         <div class="post-footer">
           <button class="secondary" 
-                  id="btn-${postIdStr}" 
-                  onclick="toggleReplies('${postIdStr}')" 
+                  id="btn-${uniqueKey}" 
+                  onclick="toggleReplies('${postIdStr}', '${uniqueKey}')" 
                   style="display: ${p.replyCount > 0 ? 'inline-block' : 'none'};">
             返信を表示 (${p.replyCount || 0})
           </button>
-          <button class="secondary" onclick="showReplyForm('${postIdStr}', this)">返信</button>
-          <button class="secondary btn-like ${activeClass}" id="like-${postIdStr}" onclick="handleLike('${postIdStr}', this)">
+          <button class="secondary" onclick="showReplyForm('${postIdStr}', '${uniqueKey}')">返信</button>
+          <button class="secondary btn-like ${activeClass}" id="like-${uniqueKey}" onclick="handleLike('${postIdStr}', '${uniqueKey}')">
             ❤️ ${p.likeCount || 0}
           </button>
         </div>
-        <div id="reply-form-container-${postIdStr}"></div>
-        <div class="reply-container" id="replies-${postIdStr}"></div>
+        <div id="reply-form-container-${uniqueKey}"></div>
+        <div class="reply-container" id="replies-${uniqueKey}"></div>
       `;
       return div;
     }
 
-    async function toggleReplies(postId) {
-      const container = document.getElementById(`replies-${postId}`);
-      const btn = document.getElementById(`btn-${postId}`);
+    async function toggleReplies(postId, uniqueKey) {
+      const container = document.getElementById(`replies-${uniqueKey}`);
+      const btn = document.getElementById(`btn-${uniqueKey}`);
       if (container.style.display === 'block') {
         container.style.display = 'none';
-        if (btn) btn.innerText = `返信を表示`;
+        if (btn) btn.innerText = `返信を表示 (${btn.innerText.match(/\d+/)})`;
       } else {
         container.innerHTML = '読み込み中...';
         container.style.display = 'block';
-        if (btn) btn.innerText = `返信を非表示`;
+        if (btn) btn.innerText = `返信を非表示 (${btn.innerText.match(/\d+/)})`;
         const userId = document.getElementById('userId').value;
         const replies = await callGas("fetchPosts", { parentId: postId, userId: userId });
-        renderReplyList(postId, replies);
+        renderReplyList(uniqueKey, replies);
       }
     }
 
-    function renderReplyList(parentId, replies) {
-      const container = document.getElementById(`replies-${parentId}`);
+    function renderReplyList(uniqueKey, replies) {
+      const container = document.getElementById(`replies-${uniqueKey}`);
       container.innerHTML = '';
       replies.forEach(r => container.appendChild(renderPost(r, true)));
     }
 
-    function showReplyForm(parentId, btn) {
-      const container = document.getElementById(`reply-form-container-${parentId}`);
+    function showReplyForm(postId, uniqueKey) {
+      const container = document.getElementById(`reply-form-container-${uniqueKey}`);
       if (container.innerHTML !== "") { container.innerHTML = ""; return; }
       container.innerHTML = `
         <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa;">
-          <textarea id="reply-content-${parentId}" rows="2" placeholder="#${parentId} への返信" style="width:100%; margin-bottom:5px;"></textarea>
-          <button class="secondary" style="width:100%; background:#333; color:#fff;" onclick="submitReply('${parentId}')">返信を送信</button>
+          <textarea id="reply-content-${uniqueKey}" rows="2" placeholder="#${postId} への返信" style="width:100%; margin-bottom:5px;"></textarea>
+          <button class="secondary" style="width:100%; background:#333; color:#fff;" onclick="submitReply('${postId}', '${uniqueKey}')">返信を送信</button>
         </div>`;
     }
 
-    async function submitReply(parentId) {
-      const contentField = document.getElementById(`reply-content-${parentId}`);
+    async function submitReply(postId, uniqueKey) {
+      const contentField = document.getElementById(`reply-content-${uniqueKey}`);
       const data = {
         displayName: document.getElementById('displayName').value,
         userId: document.getElementById('userId').value,
         content: contentField.value,
-        parentId: parentId
+        parentId: postId
       };
-
       if (!data.content.trim()) return;
 
-      // 送信中であることを示す（連打防止）
-      const formContainer = document.getElementById(`reply-form-container-${parentId}`);
-      const submitBtn = formContainer.querySelector('button');
-      const originalBtnText = submitBtn.innerText;
+      const submitBtn = document.querySelector(`#reply-form-container-${uniqueKey} button`);
       submitBtn.disabled = true;
-      submitBtn.innerText = "送信中...";
 
       try {
         const res = await callGas("addNewPost", data);
         if (res.success) {
-          // フォームを閉じる
-          formContainer.innerHTML = "";
-
-          // --- 親投稿の「返信を表示」ボタンを更新 ---
-          const btn = document.getElementById(`btn-${parentId}`);
+          document.getElementById(`reply-form-container-${uniqueKey}`).innerHTML = "";
+          const btn = document.getElementById(`btn-${uniqueKey}`);
           if (btn) {
-            // ボタンを表示状態にする
             btn.style.display = "inline-block";
-            // 現在の数字を取得して+1する（正規表現で数字だけ抜き出し）
             const currentCount = parseInt(btn.innerText.match(/\d+/) || [0]);
             btn.innerText = `返信を非表示 (${currentCount + 1})`;
           }
-
-          // 返信一覧エリアを表示状態にして読み込み
-          const container = document.getElementById(`replies-${parentId}`);
+          const container = document.getElementById(`replies-${uniqueKey}`);
           container.style.display = 'block';
-          container.innerHTML = '読み込み中...';
-
           const userId = document.getElementById('userId').value;
-          const replies = await callGas("fetchPosts", { parentId: parentId, userId: userId });
-          renderReplyList(parentId, replies);
+          const replies = await callGas("fetchPosts", { parentId: postId, userId: userId });
+          renderReplyList(uniqueKey, replies);
         }
       } catch (e) {
-        console.error(e);
-        alert("返信の送信に失敗しました");
-        submitBtn.disabled = false;
-        submitBtn.innerText = originalBtnText;
+        alert("送信失敗");
       }
     }
 
-    async function handleLike(postId, btn) {
+    async function handleLike(postId, uniqueKey) {
       const userId = document.getElementById('userId').value;
       if (!userId) return alert("秘密コードが必要です");
+      const btn = document.getElementById(`like-${uniqueKey}`);
       btn.disabled = true;
       const res = await callGas("toggleLike", { postId, userId });
       if (res.success) {
@@ -260,8 +248,8 @@
       loadTimeline();
     }
 
-    function toggleMenu(postId) {
-      const menu = document.getElementById(`menu-${postId}`);
+    function toggleMenu(uniqueKey) {
+      const menu = document.getElementById(`menu-${uniqueKey}`);
       const isVisible = menu.style.display === 'block';
       document.querySelectorAll('.post-menu').forEach(m => m.style.display = 'none');
       menu.style.display = isVisible ? 'none' : 'block';
@@ -271,8 +259,18 @@
     }
 
     function parseContent(content) {
-      let html = md.render(content);
+      // 1. 画像URLの自動変換
+      const imgRegex = /(https?:\/\/[^\s]+\.(?:jp?g|png|gif|webp|bmp))/gi;
+      let replacedContent = content.replace(imgRegex, (url) => {
+        return `\n<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:10px; display:block;">\n`;
+      });
+
+      // 2. Markdown適用
+      let html = md.render(replacedContent);
+
+      // 3. 引用リンクの置換
       html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`);
+      
       setTimeout(() => loadEmbeds(), 100);
       return html;
     }
@@ -282,26 +280,20 @@
       for (const el of embeds) {
         const id = el.dataset.embedId;
         el.classList.add('loaded');
-        
         const posts = await callGas("fetchPosts", { parentId: "", userId: "", postId: id });
-        
         if (posts && posts.length > 0) {
           const p = posts[0];
-          // Markdownを適用
-          const renderedContent = md.render(p.content || "");
-          
           el.innerHTML = `
-            <div class="quote-card" onclick="location.href='#post-${p.post_id}'">
+            <div class="quote-card" onclick="location.href='#card-${p.post_id}'">
               <div class="quote-header">
                 <span class="user-name">${p.display_name}</span> 
-                <span style="margin-left:5px;">ID:${p.user_hash}</span>
+                <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
                 <span class="post-id" style="margin-left:5px;">#${p.post_id}</span>
               </div>
-              <div class="quote-content">${renderedContent}</div>
-            </div>
-          `;
+              <div class="quote-content">${parseContent(p.content || "")}</div>
+            </div>`;
         } else {
-          el.innerHTML = `<div class="quote-card-error">引用元の投稿が見つかりません (#${id})</div>`;
+          el.innerHTML = `<div class="quote-card-error">引用元が見つかりません</div>`;
         }
       }
     }
@@ -315,7 +307,7 @@
     }
 
     function copyToEmbed(postId) { navigator.clipboard.writeText(`lett/post/${postId}`); alert("コピーしました"); }
-    function copyToExternal(postId) { navigator.clipboard.writeText(`${window.location.href.split('#')[0]}#post-${postId}`); alert("URLをコピーしました"); }
+    function copyToExternal(postId) { navigator.clipboard.writeText(`${window.location.href.split('#')[0]}#card-${postId}`); alert("URLをコピーしました"); }
   </script>
 </body>
 </html>
