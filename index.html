@@ -96,7 +96,7 @@
       const activeClass = p.isLikedByMe ? "active" : "";
       
       // リポストラベル
-      const repostHtml = p.is_repost ? `<div class="repost-label">♻️ リポスト済 (ID:${p.reposter_hash})</div>` : "";
+      const repostHtml = p.is_repost ? `<div class="repost-label">ID:${p.reposter_hash} によるリポスト</div>` : "";
 
       div.innerHTML = `
         ${repostHtml}
@@ -157,9 +157,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       contentField.focus();
     }
-
-    // (以下、toggleReplies, submitPost, handleLike, parseContentなどは以前のロジックと同様)
-    // ※省略せずに全て含めて実装してください
     
     async function submitPost(btn) {
       const contentField = document.getElementById('content');
