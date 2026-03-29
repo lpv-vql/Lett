@@ -80,7 +80,6 @@
     }
     .quote-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       margin-bottom: 5px;
       color: #666;
@@ -116,7 +115,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzlvKBWE3fIyTtQKqJh1g6xCsWho2mmboA0gaYh2dvFNT_QIELrFh0kq6TsfQaletAn/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxSgFWmr3t6VaPgaaIGyFOYUqpVNdMLpY-sUS5PB2cWKq5BZbgT5S03quFzhO-WLD8/exec";
     const md = window.markdownit();
 
     window.onload = () => {
@@ -164,13 +163,14 @@
 
       // まとめてHTMLを生成
       div.innerHTML = `
-        <div class="menu-trigger" style="font-size: 20px; font-weight: bold; line-height: 1;" onclick="toggleMenu('${postIdStr}')">⋮</div>
+        <div class="menu-trigger" style="font-size: 22px; padding: 0 10px;" onclick="toggleMenu('${postIdStr}')">⋮</div>
         <div class="post-menu" id="menu-${postIdStr}">
           <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
           <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
           <button onclick="repost('${postIdStr}')">リポスト</button>
-          <button id="hide-btn-${postIdStr}" style="display:none; color:red;" onclick="toggleHide('${postIdStr}')">表示/非表示</button>
+          
+          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">表示/非表示</button>` : ''}
         </div>
 
         <div class="post-header">
@@ -420,6 +420,59 @@
       navigator.clipboard.writeText(url);
       alert("外部用リンクをコピーしました");
     }
-  </script>
+
+    // 引用して投稿：入力欄にリンクを自動セットしてフォーカス
+function prepareQuote(postId) {
+  const contentField = document.getElementById('content');
+  const embedTag = `lett/post/${postId}`;
+  
+  // すでに何か書いてある場合は改行して追加
+  if (contentField.value.trim()) {
+    contentField.value += "\n\n" + embedTag + "\n";
+  } else {
+    contentField.value = embedTag + "\n";
+  }
+  
+  // 入力欄へスクロールしてフォーカス
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  contentField.focus();
+}
+
+// リポスト：コメントなしで即座に引用投稿
+async function repost(postId) {
+  const userId = document.getElementById('userId').value;
+  const displayName = document.getElementById('displayName').value;
+  if (!userId) return alert("秘密コードが必要です");
+
+  if (!confirm(`#${postId} をリポストしますか？`)) return;
+
+  const data = {
+    displayName: displayName,
+    userId: userId,
+    content: `lett/post/${postId}`, // 埋め込みリンクを本文にする
+    parentId: "" // 新規投稿として扱う
+  };
+
+  const res = await callGas("addNewPost", data);
+  if (res.success) {
+    alert("リポストしました！");
+    loadTimeline();
+  }
+}
+
+// 表示/非表示の切り替え
+async function toggleHide(postId) {
+  const userId = document.getElementById('userId').value;
+  if (!confirm("この投稿の表示/非表示を切り替えますか？")) return;
+
+  const res = await callGas("toggleVisibility", { postId, userId });
+  if (res.success) {
+    alert(res.hidden ? "非表示にしました" : "表示に戻しました");
+    loadTimeline();
+  } else {
+    alert("エラー：自分の投稿ではないか、コードが違います");
+  }
+}
+</script>
 </body>
 </html>
