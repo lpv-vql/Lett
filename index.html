@@ -106,16 +106,21 @@
         <div class="post-menu" id="menu-${uniqueKey}">
           <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
-          <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
+          <button onclick="prepareQuote('${postIdStr}')">引用</button>
           <button onclick="executeRepost('${postIdStr}')">リポスト</button>
-          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">${p.is_hidden === 'TRUE' ? '表示に戻す' : '表示/非表示'}</button>` : ''}
+          ${p.isMine ? `
+            <button onclick="startEdit('${postIdStr}', '${uniqueKey}')">投稿を編集</button>
+            <button style="color:red;" onclick="toggleHide('${postIdStr}')">
+              ${p.is_hidden === 'TRUE' ? '表示する' : '非表示にする'}
+            </button>
+          ` : ''}
         </div>
 
         <div class="post-header">
           <span class="user-name">${p.display_name}</span> 
           <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
           <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
-          ${p.is_hidden === "TRUE" ? " <small style='color:red;'>[非表示中]</small>" : ""}
+          ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
         <div class="post-content">${parseContent(p.content || "")}</div>
         <div class="post-footer">
@@ -328,6 +333,62 @@
 
     function copyToEmbed(postId) { navigator.clipboard.writeText(`lett/post/${postId}`); alert("コピーしました"); }
     function copyToExternal(postId) { navigator.clipboard.writeText(`${window.location.href.split('#')[0]}#card-${postId}`); alert("URLをコピーしました"); }
+
+    // 編集開始：入力欄に内容をセットしてスクロール
+    function startEdit(postId, uniqueKey) {
+      const card = document.getElementById(`card-${uniqueKey}`);
+      // 元のテキストを取得
+
+      const contentField = document.getElementById('content');
+      const submitBtn = document.querySelector('#editor button');
+      
+      // 投稿カードからテキストを取得
+      alert("編集モード：上の入力欄で内容を書き換えて「更新する」を押してください");
+      
+      // 元の投稿内容を入力欄へ
+      const rawContent = document.querySelector(`#card-${uniqueKey} .post-content`).innerText.trim();
+      contentField.value = rawContent;
+      
+      // 送信ボタンを「更新」に変える
+      submitBtn.innerText = "更新する (修正)";
+      submitBtn.onclick = () => updatePost(postId, submitBtn);
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      contentField.focus();
+    }
+
+    // 編集実行
+    async function updatePost(postId, btn) {
+      const contentField = document.getElementById('content');
+      const data = {
+        postId: postId,
+        userId: document.getElementById('userId').value,
+        content: contentField.value
+      };
+
+      if (!data.content.trim()) return;
+
+      btn.disabled = true;
+      btn.innerText = "更新中...";
+
+      try {
+        const res = await callGas("editPost", data);
+        if (res.success) {
+          alert("更新しました");
+          contentField.value = '';
+          // ボタンを元に戻す
+          btn.innerText = "投稿する";
+          btn.onclick = () => submitPost(btn);
+          loadTimeline();
+        } else {
+          alert(res.error);
+        }
+      } catch (e) {
+        alert("通信エラー");
+      } finally {
+        btn.disabled = false;
+      }
+    }
   </script>
 </body>
 </html>
