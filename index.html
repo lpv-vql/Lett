@@ -339,7 +339,7 @@
               <div class="quote-content">${parseContent(p.content || "")}</div>
             </div>`;
         } else {
-          el.innerHTML = `<div class="quote-card-error">引用元が見つかりません</div>`;
+          el.innerHTML = `<div class="quote-card-error">引用元が見つかりません (#${id})</div>`;
         }
       }
     }
