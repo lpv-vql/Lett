@@ -47,6 +47,13 @@
     .quote-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 5px; color: #666; font-size: 0.85em; gap: 5px; }
     .quote-content { color: #333; word-break: break-all; }
     .quote-content p { margin: 2px 0; }
+    .post-time {
+      font-weight: normal;
+      cursor: default;
+    }
+    .post-time:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -103,10 +110,8 @@
       const postIdStr = String(p.post_id);
       const activeClass = p.isLikedByMe ? "active" : "";
       const repostHtml = p.is_repost ? `<div class="repost-label">ID:${p.reposter_hash} によるリポスト</div>` : "";
-
-      // 属性値として安全に埋め込むためにダブルクォートをエスケープ
-      // 改行が属性値に入ると壊れる場合があるため、生データを保持しつつパース
       const rawContent = p.content ? p.content.replace(/"/g, '&quot;') : "";
+      const relativeTime = getRelativeTime(p.timestamp);
 
       div.innerHTML = `
         ${repostHtml}
@@ -125,9 +130,10 @@
         </div>
 
         <div class="post-header">
+          <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
           <span class="user-name">${p.display_name}</span> 
           <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
-          <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
+          <span class="post-time" style="margin-left:10px; color:#999; font-size:0.85em;">${relativeTime}</span>
           ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
         
@@ -323,9 +329,9 @@
           el.innerHTML = `
             <div class="quote-card" onclick="location.href='#card-${p.post_id}'">
               <div class="quote-header">
+                <span class="post-id" style="margin-left:5px;">#${p.post_id}</span>
                 <span class="user-name">${p.display_name}</span> 
                 <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
-                <span class="post-id" style="margin-left:5px;">#${p.post_id}</span>
               </div>
               <div class="quote-content">${parseContent(p.content || "")}</div>
             </div>`;
@@ -409,6 +415,24 @@
        alert("通信エラー");
         btn.disabled = false;
       }
+    }
+
+    function getRelativeTime(dateString) {
+      const now = new Date();
+      const posted = new Date(dateString);
+      const diffMs = now - posted;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
+
+      if (diffSec < 60) return 'たった今';
+      if (diffMin < 60) return `${diffMin}分前`;
+      if (diffHour < 24) return `${diffHour}時間前`;
+      if (diffDay < 7) return `${diffDay}日前`;
+      
+      // 1週間以上経っていたら普通の日付表示
+      return posted.toLocaleDateString();
     }
   </script>
 </body>
