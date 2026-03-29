@@ -57,8 +57,9 @@
         <input type="password" id="userId" placeholder="秘密コード">
       </div>
       <textarea id="content" rows="3" placeholder="今なにしてる？"></textarea>
-      <button onclick="submitPost(this)">投稿する</button>
-      <button id="cancel-btn" class="btn-cancel" onclick="stopEdit()">キャンセル</button>
+  
+      <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
+      <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
     </div>
     <div id="timeline">読み込み中...</div>
   </div>
@@ -103,6 +104,10 @@
       const activeClass = p.isLikedByMe ? "active" : "";
       const repostHtml = p.is_repost ? `<div class="repost-label">ID:${p.reposter_hash} によるリポスト</div>` : "";
 
+      // 属性値として安全に埋め込むためにダブルクォートをエスケープ
+      // 改行が属性値に入ると壊れる場合があるため、生データを保持しつつパース
+      const rawContent = p.content ? p.content.replace(/"/g, '&quot;') : "";
+
       div.innerHTML = `
         ${repostHtml}
         <div class="menu-trigger" style="font-size: 22px; padding: 0 10px;" onclick="toggleMenu('${uniqueKey}')">⋮</div>
@@ -125,9 +130,11 @@
           <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
           ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
-        <div class="post-content" data-raw="${p.content.replace(/"/g, '&quot;') || ""}">
+        
+        <div class="post-content" data-raw="${rawContent}">
           ${parseContent(p.content || "")}
         </div>
+        
         <div class="post-footer">
           <button class="secondary" 
                   id="btn-${uniqueKey}" 
@@ -346,18 +353,22 @@
       const cancelBtn = document.getElementById('cancel-btn');
   
       // 1. data-rawから生のMarkdownを取得
-      const contentDiv = document.querySelector(`#card-${uniqueKey} .post-content`);
+      const card = document.getElementById(`card-${uniqueKey}`);
+      const contentDiv = card.querySelector('.post-content');
       const rawContent = contentDiv.getAttribute('data-raw');
   
       // 2. 入力欄にセット
       contentField.value = rawContent;
   
-      // 3. ボタンの表示切り替え
+      // 3. ボタンの表示切り替え（ここが動かない場合はIDの不一致）
       submitBtn.innerText = "更新する (修正)";
-      submitBtn.onclick = () => updatePost(postId, submitBtn);
-      cancelBtn.style.display = "block"; // キャンセルボタンを表示
+      // onclickを上書き
+      submitBtn.onclick = function() { updatePost(postId, this); };
+      cancelBtn.style.display = "block"; 
   
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 4. 入力欄（エディタ）へスクロール
+      const editor = document.getElementById('editor');
+      editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       contentField.focus();
     }
 
