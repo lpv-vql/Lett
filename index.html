@@ -54,9 +54,32 @@
     .post-time:hover {
       text-decoration: underline;
     }
+    .hashtag {
+      color: #007bff;
+      cursor: pointer;
+    }
+    .hashtag:hover {
+      text-decoration: underline;
+    }
+    .user-id-link {
+      margin-left:5px; 
+      color:#777; 
+      cursor:pointer;
+    }
+    .user-id-link:hover {
+      color: #007bff;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
+  <div id="search-area" style="margin-bottom:10px;">
+    <input type="text" id="search-input" placeholder="ワード検索..." onkeydown="if(event.key==='Enter') execSearch()">
+    <div id="filter-display" style="display:none; margin-top:5px; font-size:0.9em; color:#007bff;">
+      <span id="filter-text"></span>
+      <button onclick="clearFilter()" style="padding:2px 5px; margin-left:10px;">解除</button>
+    </div>
+  </div>
   <div class="container">
     <div id="editor">
       <div class="form-row">
@@ -73,8 +96,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbynPc7cUoceVZXZiFYYQLCX7MEIcTNzVqiSxxweb86GuGoWaAmUUssbkaQljhiLw1Vp/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwqmHq3hrf2PyP5WSnD93FHheUkkDBGiywjK8N0kPV1ley_NMbVgt3TUvVdSj77ZDtM/exec"; 
     const md = window.markdownit();
+
+    let currentSearchTag = ""; // ハッシュタグ用
+    let currentSearchUser = ""; // ユーザーID用
+    let currentSearchQuery = ""; // 自由ワード検索用
 
     window.onload = () => {
       document.getElementById('displayName').value = localStorage.getItem('displayName') || '';
@@ -91,11 +118,25 @@
     }
 
     async function loadTimeline() {
+      // 1. 検索条件やユーザー情報を一つのオブジェクトにまとめる
       const userId = document.getElementById('userId').value;
-      const posts = await callGas("fetchPosts", { parentId: "", userId: userId });
+      const requestData = {
+        parentId: "", // タイムラインなので基本は空
+        userId: userId,
+        searchTag: currentSearchTag,   // ハッシュタグ
+        searchUser: currentSearchUser, // ユーザーID絞り込み
+        searchQuery: currentSearchQuery // ワード検索
+      };
+      // 2. GASを呼び出す（1回だけでOK！）
+      const posts = await callGas("fetchPosts", requestData);
+      // 3. 画面（タイムライン）をクリアして描画する
       const tl = document.getElementById('timeline');
       tl.innerHTML = '';
-      posts.forEach(p => tl.appendChild(renderPost(p)));
+      if (posts && posts.length > 0) {
+        posts.forEach(p => tl.appendChild(renderPost(p)));
+      } else {
+        tl.innerHTML = '<div style="padding:20px; color:#999; text-align:center;">投稿が見つかりませんでした</div>';
+      }
     }
 
     function renderPost(p, isReply = false) {
@@ -132,7 +173,7 @@
         <div class="post-header">
           <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
           <span class="user-name">${p.display_name}</span> 
-          <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
+          <span class="user-id-link" onclick="setFilterUser('${p.user_hash}')">ID:${p.user_hash}</span>
           <span class="post-time" style="margin-left:10px; color:#999; font-size:0.85em;">${relativeTime}</span>
           ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
@@ -302,18 +343,23 @@
     }
 
     function parseContent(content) {
-      // 1. 画像URLの自動変換
+      if (!content) return "";
+
+      // 1. ハッシュタグをリンク化
+      // #タグ を <span class="hashtag">#タグ</span> に変換
+      let processedText = content.replace(/#([^\s#]+)/g, '<span class="hashtag" onclick="setFilterTag(\'$1\')">#$1</span>');
+      // 2. 画像URLの自動変換
       const imgRegex = /(https?:\/\/[^\s]+\.(?:jp?g|png|gif|webp|bmp))/gi;
-      let replacedContent = content.replace(imgRegex, (url) => {
+      processedText = processedText.replace(imgRegex, (url) => {
         return `\n<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:10px; display:block;">\n`;
       });
-
-      // 2. Markdown適用
-      let html = md.render(replacedContent);
-
-      // 3. 引用リンクの置換
-      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`);
-      
+      // 3. Markdown適用 (ここでHTMLに変換される)
+      let html = md.render(processedText);
+      // 4. 引用リンクの置換 (lett/post/ID)
+      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => 
+        `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`
+      );
+      // 埋め込みの読み込みを予約
       setTimeout(() => loadEmbeds(), 100);
       return html;
     }
@@ -436,6 +482,38 @@
       
       // 1週間以上経っていたら普通の日付表示
       return posted.toLocaleDateString();
+    }
+
+    function setFilterTag(tag) {
+      currentSearchTag = "#" + tag;
+      updateFilterUI(`タグ: ${currentSearchTag}`);
+    }
+
+    function setFilterUser(userHash) {
+      currentSearchUser = userHash;
+      updateFilterUI(`ユーザー: ${userHash}`);
+    }
+
+    function execSearch() {
+      const q = document.getElementById('search-input').value;
+      if (!q) return;
+      currentSearchQuery = q;
+      updateFilterUI(`検索: ${q}`);
+    }
+
+    function updateFilterUI(text) {
+      document.getElementById('filter-text').innerText = text;
+      document.getElementById('filter-display').style.display = "block";
+      loadTimeline(); // 再読み込み
+    }
+
+    function clearFilter() {
+      currentSearchTag = "";
+      currentSearchUser = "";
+      currentSearchQuery = "";
+      document.getElementById('search-input').value = "";
+      document.getElementById('filter-display').style.display = "none";
+      loadTimeline();
     }
   </script>
 </body>
