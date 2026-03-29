@@ -15,7 +15,7 @@
     .btn-like { transition: all 0.2s; background: #fdfdfd; border: 1px solid #eee; }
     .btn-like:hover { background: #fff0f0; border-color: #ffbaba; }
     .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
-    .btn-cancel { background: #ccc; color: #fff; display: none; margin-top: 5px; }
+    .btn-cancel { background: #5cb85c; }
     
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; position: relative; background: #fff; }
     .post-card:has(.post-menu[style*="display: block"]) { z-index: 100; }
@@ -274,7 +274,7 @@
     async function executeRepost(postId) {
       const userId = document.getElementById('userId').value;
       if (!userId) return alert("秘密コードが必要です");
-      if (!confirm("リポスト（再放流）しますか？")) return;
+      if (!confirm("リポストしますか？")) return;
       const res = await callGas("doRepost", { postId, userId });
       if (res.success) { loadTimeline(); }
     }
@@ -403,7 +403,7 @@
         } else {
           alert(res.error);
           btn.disabled = false;
-          btn.innerText = "更新する (修正)";
+          btn.innerText = "更新する";
         }
       } catch (e) {
        alert("通信エラー");
