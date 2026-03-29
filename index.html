@@ -122,7 +122,9 @@
           <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
           ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
-        <div class="post-content">${parseContent(p.content || "")}</div>
+        <div class="post-content" data-raw="${p.content.replace(/"/g, '&quot;') || ""}">
+          ${parseContent(p.content || "")}
+        </div>
         <div class="post-footer">
           <button class="secondary" 
                   id="btn-${uniqueKey}" 
@@ -336,27 +338,25 @@
 
     // 編集開始：入力欄に内容をセットしてスクロール
     function startEdit(postId, uniqueKey) {
-      const card = document.getElementById(`card-${uniqueKey}`);
-      // 元のテキストを取得
-
       const contentField = document.getElementById('content');
       const submitBtn = document.querySelector('#editor button');
       
-      // 投稿カードからテキストを取得
-      alert("編集モード：上の入力欄で内容を書き換えて「更新する」を押してください");
+      // 1. カードに隠しておいた「生のテキスト」を取得
+      const contentDiv = document.querySelector(`#card-${uniqueKey} .post-content`);
+      const rawContent = contentDiv.getAttribute('data-raw');
       
-      // 元の投稿内容を入力欄へ
-      const rawContent = document.querySelector(`#card-${uniqueKey} .post-content`).innerText.trim();
+      // 2. 入力欄にセット
       contentField.value = rawContent;
       
-      // 送信ボタンを「更新」に変える
-      submitBtn.innerText = "更新する (修正)";
+      // 3. 送信ボタンを「更新」モードに切り替え
+      submitBtn.innerText = "更新する";
+      // クリックした時に updatePost を実行するように書き換え
       submitBtn.onclick = () => updatePost(postId, submitBtn);
       
+      // 4. 画面を上へスライドしてフォーカス
       window.scrollTo({ top: 0, behavior: 'smooth' });
       contentField.focus();
     }
-
     // 編集実行
     async function updatePost(postId, btn) {
       const contentField = document.getElementById('content');
@@ -374,19 +374,22 @@
       try {
         const res = await callGas("editPost", data);
         if (res.success) {
-          alert("更新しました");
           contentField.value = '';
-          // ボタンを元に戻す
+          
+          // --- ボタンを元の状態（新規投稿用）にリセット ---
           btn.innerText = "投稿する";
-          btn.onclick = () => submitPost(btn);
-          loadTimeline();
+          btn.onclick = () => submitPost(btn); 
+          
+          await loadTimeline(); // 画面を更新
         } else {
-          alert(res.error);
+          alert(res.error || "編集に失敗しました");
+          btn.disabled = false;
+          btn.innerText = "更新する (修正)";
         }
       } catch (e) {
-        alert("通信エラー");
-      } finally {
+        alert("通信エラーが発生しました");
         btn.disabled = false;
+        btn.innerText = "更新する (修正)";
       }
     }
   </script>
