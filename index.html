@@ -224,14 +224,34 @@
         content: contentField.value,
         parentId: "" 
       };
+
       if (!data.content.trim()) return;
+
+      // --- 送信中の演出 ---
+      const originalText = btn.innerText;
       btn.disabled = true;
+      btn.innerText = "送信中...";
+
+      // 入力情報を保存
       localStorage.setItem('displayName', data.displayName);
       localStorage.setItem('userId', data.userId);
-      await callGas("addNewPost", data);
-      contentField.value = '';
-      btn.disabled = false;
-      loadTimeline();
+
+      try {
+        const res = await callGas("addNewPost", data);
+        if (res.success) {
+          contentField.value = '';
+          await loadTimeline(); // タイムラインを再読み込み
+        } else {
+          alert("投稿に失敗しました: " + (res.error || "不明なエラー"));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("通信エラーが発生しました");
+      } finally {
+        // --- 状態を元に戻す ---
+        btn.disabled = false;
+        btn.innerText = originalText;
+      }
     }
 
     async function executeRepost(postId) {
