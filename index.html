@@ -345,25 +345,24 @@
     function parseContent(content) {
       if (!content) return "";
 
-      // 1. ハッシュタグをリンク化
-      // #タグ を <span class="hashtag">#タグ</span> に変換
-      let processedText = content.replace(/#([^\s#]+)/g, '<span class="hashtag" onclick="setFilterTag(\'$1\')">#$1</span>');
-      // 2. 画像URLの自動変換
+      // 1. まずは画像URLをMarkdownで扱いやすい形に整理（改行を入れる）
       const imgRegex = /(https?:\/\/[^\s]+\.(?:jp?g|png|gif|webp|bmp))/gi;
-      processedText = processedText.replace(imgRegex, (url) => {
-        return `\n<img src="${url}" style="max-width:100%; border-radius:8px; margin-top:10px; display:block;">\n`;
+      let textWithImages = content.replace(imgRegex, (url) => {
+        return `\n\n![](${url})\n\n`;
       });
-      // 3. Markdown適用 (ここでHTMLに変換される)
-      let html = md.render(processedText);
+      // 2. Markdownを適用してHTMLに変換
+      let html = md.render(textWithImages);
+      // 3. 出来上がったHTMLに対して、ハッシュタグをリンクに書き換える
+      html = html.replace(/#([^\s#<]+)/g, '<span class="hashtag" style="color:#007bff; cursor:pointer;" onclick="setFilterTag(\'$1\')">#$1</span>');
       // 4. 引用リンクの置換 (lett/post/ID)
       html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => 
         `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`
       );
       // 埋め込みの読み込みを予約
       setTimeout(() => loadEmbeds(), 100);
+
       return html;
     }
-
     async function loadEmbeds() {
       const embeds = document.querySelectorAll('.embedded-post:not(.loaded)');
       for (const el of embeds) {
@@ -416,7 +415,7 @@
       contentField.value = rawContent;
   
       // 3. ボタンの表示切り替え（ここが動かない場合はIDの不一致）
-      submitBtn.innerText = "更新する (修正)";
+      submitBtn.innerText = "更新する";
       // onclickを上書き
       submitBtn.onclick = function() { updatePost(postId, this); };
       cancelBtn.style.display = "block"; 
