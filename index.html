@@ -105,7 +105,7 @@
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
           <button onclick="prepareQuote('${postIdStr}')">引用して投稿</button>
           <button onclick="executeRepost('${postIdStr}')">リポスト</button>
-          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">${p.is_hidden === 'TRUE' ? '表示に戻す' : '表示/非表示'}</button>` : ''}
+          ${p.isMine ? `<button style="color:red;" onclick="toggleHide('${postIdStr}')">${p.is_hidden === 'TRUE' ? '表示する' : '非表示にする'}</button>` : ''}
         </div>
 
         <div class="post-header">
