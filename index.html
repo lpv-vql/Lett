@@ -468,7 +468,7 @@
 
     function prepareQuote(postId) {
       const contentField = document.getElementById('content');
-      const tag = `lett/post/${postId}`;
+      const tag = `lett/post/${postId}\n`;
       contentField.value = contentField.value.trim() ? contentField.value + "\n\n" + tag : tag;
       window.scrollTo({ top: 0, behavior: 'smooth' });
       contentField.focus();
