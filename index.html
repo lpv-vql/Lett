@@ -82,13 +82,28 @@
     </div>
 
     <div id="editor">
-      <div class="form-row">
-        <input type="text" id="displayName" placeholder="表示名">
-        <input type="password" id="userId" placeholder="秘密コード">
+      <div id="profile-display" onclick="showProfileEdit()" style="cursor:pointer; margin-bottom:10px; padding:10px; background:#f9f9f9; border:1px solid #eee; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span id="display-name-view" style="font-weight:bold; color:#333;">名前なし</span>
+          <span id="user-id-view" style="margin-left:8px; font-size:0.85em; color:#888;">(ID未設定)</span>
+        </div>
+        <span style="font-size:12px; color:#007bff;">編集</span>
       </div>
+
+      <div id="profile-edit" style="display:none; margin-bottom:10px; padding:10px; border:1px solid #007bff; border-radius:8px; background:#f0f7ff;">
+        <div class="form-row">
+          <input type="text" id="displayName" placeholder="表示名" oninput="updateProfileView()">
+          <input type="password" id="userId" placeholder="秘密コード" oninput="updateProfileView()">
+        </div>
+        <div style="text-align:right;">
+          <button class="secondary" onclick="hideProfileEdit()" style="width:auto !important; padding:5px 15px; margin-top:5px; background:#007bff; color:#fff;">完了</button>
+        </div>
+      </div>
+
       <textarea id="content" rows="3" placeholder="今なにしてる？"></textarea>
+      
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
-      <button id="cancel-btn" class="btn-cancel" onclick="stopEdit()">キャンセル</button>
+      <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
     </div>
 
     <div id="timeline">読み込み中...</div>
@@ -103,9 +118,21 @@
     let currentSearchUser = "";
     let currentSearchQuery = "";
 
+    // ページ読み込み時の処理
     window.onload = () => {
-      document.getElementById('displayName').value = localStorage.getItem('displayName') || '';
-      document.getElementById('userId').value = localStorage.getItem('userId') || '';
+      const savedName = localStorage.getItem('displayName');
+      const savedId = localStorage.getItem('userId');
+
+      if (savedName) document.getElementById('displayName').value = savedName;
+      if (savedId) document.getElementById('userId').value = savedId;
+
+      // 初めてのアクセス（保存された名前がない）なら編集モードにする
+      if (!savedName) {
+        showProfileEdit();
+      } else {
+        updateProfileView();
+      }
+
       loadTimeline();
     };
 
@@ -136,6 +163,35 @@
       } else {
         tl.innerHTML = '<div class="timeline-empty">投稿が見つかりませんでした</div>';
       }
+    }
+
+    // 表示用のテキストを更新する
+    function updateProfileView() {
+      const name = document.getElementById('displayName').value;
+      const id = document.getElementById('userId').value;
+      
+      document.getElementById('display-name-view').innerText = name || "名前なし";
+      document.getElementById('user-id-view').innerText = id ? `(ID: 設定済み)` : `(ID未設定)`;
+    }
+
+    // 入力モードに切り替える
+    function showProfileEdit() {
+      document.getElementById('profile-display').style.display = 'none';
+      document.getElementById('profile-edit').style.display = 'block';
+    }
+
+    // 入力モードを閉じる
+    function hideProfileEdit() {
+      const name = document.getElementById('displayName').value;
+      const id = document.getElementById('userId').value;
+      
+      // 保存
+      localStorage.setItem('displayName', name);
+      localStorage.setItem('userId', id);
+      
+      updateProfileView();
+      document.getElementById('profile-edit').style.display = 'none';
+      document.getElementById('profile-display').style.display = 'block';
     }
 
     function renderPost(p, isReply = false) {
