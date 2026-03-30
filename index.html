@@ -14,8 +14,9 @@
     /* フォーム要素 */
     input, textarea, button { border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
     textarea { resize: vertical; }
-    button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; transition: opacity 0.2s; }
+    button { background: #333; color: #fff; border: 1px solid #333; cursor: pointer; border: none; font-weight: bold; transition: opacity 0.2s background-color 0.2s, color 0.2s; }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
+    button:hover { background: #fff; color: #333; border: }
     button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
     
     /* ボタンバリエーション */
@@ -103,14 +104,14 @@
       <div id="profile-edit" style="display:none; margin-bottom:10px; padding:10px; border:1px solid #eee; border-radius:2px; background:#fafafa;">
         <div class="form-row">
           <input type="text" id="displayName" placeholder="表示名" oninput="updateProfileView()">
-          <input type="password" id="userId" placeholder="秘密コード" oninput="updateProfileView()">
+          <input type="password" id="userId" placeholder="パスワード" oninput="updateProfileView()">
         </div>
         <div style="text-align:right;">
           <button class="secondary" onclick="hideProfileEdit()" style="width:auto !important; padding:5px 15px; margin-top:5px; background:#eee; color:#333;">完了</button>
         </div>
       </div>
 
-      <textarea id="content" rows="3" placeholder="今なにしてる？"></textarea>
+      <textarea id="content" rows="3" placeholder="投稿を入力..."></textarea>
       
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
       <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
@@ -160,7 +161,7 @@
       // 1. 取得を開始する前に、今の表示を消して「読み込み中」を出す
       let loadingMsg = "読み込み中...";
       if (currentSearchTag) loadingMsg = `${currentSearchTag} を検索中...`;
-      else if (currentSearchUser) loadingMsg = `ユーザー ID:${currentSearchUser} の投稿を読み込み中...`;
+      else if (currentSearchUser) loadingMsg = `ID:${currentSearchUser} の投稿を読み込み中...`;
       else if (currentSearchQuery) loadingMsg = `「${currentSearchQuery}」を検索中...`;
       
       tl.innerHTML = `<div style="padding:40px; color:#666; text-align:center;">
@@ -350,7 +351,7 @@
 
     async function handleLike(postId, uniqueKey) {
       const userId = document.getElementById('userId').value;
-      if (!userId) return alert("秘密コードが必要です");
+      if (!userId) return alert("パスワードが必要です");
       const btn = document.getElementById(`like-${uniqueKey}`);
       btn.disabled = true;
       const res = await callGas("toggleLike", { postId, userId });
@@ -399,7 +400,7 @@
 
     async function executeRepost(postId) {
       const userId = document.getElementById('userId').value;
-      if (!userId) return alert("秘密コードが必要です");
+      if (!userId) return alert("パスワードが必要です");
       if (!confirm("リポストしますか？")) return;
       const res = await callGas("doRepost", { postId, userId });
       if (res.success) { loadTimeline(); }
