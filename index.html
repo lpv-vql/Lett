@@ -70,15 +70,55 @@
       color: #007bff;
       text-decoration: underline;
     }
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      max-width: 400px; /* お好みの幅に */
+    }
+    #search-input {
+      width: 100%;
+      padding: 10px 40px 10px 12px; /* 右側にボタン用の余白を作る */
+      border: 2px solid #ddd;
+      border-radius: 20px; /* 丸みをつけてSNSっぽく */
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #search-input:focus {
+      border-color: #007bff;
+    }
+    #clear-btn {
+      position: absolute;
+      right: 8px;
+      background: #eee;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: none; /* 通常は隠しておく */
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      color: #666;
+      padding: 0;
+    }
+    #clear-btn:hover {
+      background: #ddd;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div id="search-area" style="margin-bottom:10px;">
-      <input type="text" id="search-input" placeholder="ワード検索..." onkeydown="if(event.key==='Enter') execSearch()">
-      <div id="filter-display" style="display:none; margin-top:5px; font-size:0.9em; color:#007bff;">
-        <span id="filter-text"></span>
-        <button onclick="clearFilter()" style="padding:2px 5px; margin-left:10px;">解除</button>
+    <div id="search-area" style="margin-bottom: 20px;">
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="キーワードや #タグ で検索..." onkeydown="if(event.key==='Enter') execSearch()">
+        <button id="clear-btn" onclick="clearFilter()" title="検索を解除">&times;</button>
+      </div>
+      <div id="filter-display" style="display:none; margin-top: 8px; font-size: 0.85em; color: #007bff; font-weight: bold;">
+        <span id="filter-text"></span> を表示中
       </div>
     </div>
     <div id="editor">
@@ -501,17 +541,31 @@
     }
 
     function updateFilterUI(text) {
-      document.getElementById('filter-text').innerText = text;
-      document.getElementById('filter-display').style.display = "block";
-      loadTimeline(); // 再読み込み
+      const filterDisplay = document.getElementById('filter-display');
+      const filterText = document.getElementById('filter-text');
+      const clearBtn = document.getElementById('clear-btn');
+      
+      if (filterText) filterText.innerText = text;
+      if (filterDisplay) filterDisplay.style.display = "block";
+      if (clearBtn) clearBtn.style.display = "flex"; // ×ボタンを表示
+      
+      loadTimeline();
     }
 
     function clearFilter() {
       currentSearchTag = "";
       currentSearchUser = "";
       currentSearchQuery = "";
-      document.getElementById('search-input').value = "";
-      document.getElementById('filter-display').style.display = "none";
+      
+      const input = document.getElementById('search-input');
+      if (input) input.value = "";
+      
+      const display = document.getElementById('filter-display');
+      if (display) display.style.display = "none";
+      
+      const clearBtn = document.getElementById('clear-btn');
+      if (clearBtn) clearBtn.style.display = "none"; // ×ボタンを隠す
+      
       loadTimeline();
     }
   </script>
