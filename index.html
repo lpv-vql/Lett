@@ -67,6 +67,15 @@
     .reply-form-wrapper { margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa; }
     .form-row { display: flex; gap: 10px; }
     .timeline-empty { padding: 20px; color: #999; text-align: center; }
+    .loader-dots {
+      font-weight: bold;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
   </style>
 </head>
 <body>
@@ -145,6 +154,19 @@
     }
 
     async function loadTimeline() {
+      const tl = document.getElementById('timeline');
+      
+      // 1. 取得を開始する前に、今の表示を消して「読み込み中」を出す
+      let loadingMsg = "読み込み中...";
+      if (currentSearchTag) loadingMsg = `${currentSearchTag} を検索中...`;
+      else if (currentSearchUser) loadingMsg = `ユーザー ID:${currentSearchUser} の投稿を読み込み中...`;
+      else if (currentSearchQuery) loadingMsg = `「${currentSearchQuery}」を検索中...`;
+      
+      tl.innerHTML = `<div style="padding:40px; color:#666; text-align:center;">
+                        <div class="loader-dots">${loadingMsg}</div>
+                      </div>`;
+
+      // 2. 検索条件をまとめる
       const userId = document.getElementById('userId').value;
       const requestData = {
         parentId: "",
@@ -153,18 +175,23 @@
         searchUser: currentSearchUser,
         searchQuery: currentSearchQuery
       };
-      
-      const posts = await callGas("fetchPosts", requestData);
-      const tl = document.getElementById('timeline');
-      tl.innerHTML = '';
-      
-      if (posts && posts.length > 0) {
-        posts.forEach(p => tl.appendChild(renderPost(p)));
-      } else {
-        tl.innerHTML = '<div class="timeline-empty">投稿が見つかりませんでした</div>';
+
+      try {
+        // 3. GASを呼び出す
+        const posts = await callGas("fetchPosts", requestData);
+
+        // 4. 描画する
+        tl.innerHTML = '';
+        if (posts && posts.length > 0) {
+          posts.forEach(p => tl.appendChild(renderPost(p)));
+        } else {
+          tl.innerHTML = '<div style="padding:40px; color:#999; text-align:center;">投稿が見つかりませんでした</div>';
+        }
+      } catch (e) {
+        tl.innerHTML = '<div style="padding:40px; color:red; text-align:center;">読み込みに失敗しました</div>';
       }
     }
-
+    
     // 表示用のテキストを更新する
     function updateProfileView() {
       const name = document.getElementById('displayName').value;
