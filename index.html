@@ -616,64 +616,27 @@
       currentSearchUser = "";
       currentSearchQuery = "";
       
-      // 入力欄をリセット
+      // 1. 入力欄をリセット
       const input = document.getElementById('search-input');
-      if (input) input.value = "";
-      
-      // ×ボタンを隠す
-      const clearBtn = document.getElementById('clear-btn');
-      if (clearBtn) clearBtn.style.display = "none";
-      
-      // ★ ユーザーヘッダーを確実に隠す
-      const header = document.getElementById('user-filter-header');
-      if (header) {
-        header.style.display = "none"; // ここで非表示にする
-      }
-      
-      // ★ ページトップへ移動
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      loadTimeline();
-    }
-
-    function updateFilterUI(text) {
-      const label = document.getElementById('filter-label');
-      const input = document.getElementById('search-input');
-      const clearBtn = document.getElementById('clear-btn');
-      
-      // ラベルに「#tag」などをセットして表示
-      if (label) {
-        label.innerText = text;
-        label.style.display = "flex";
-      }
-      
-      // 入力欄の中身はクリアして、プレースホルダを控えめにする
-      if (input) {
-        input.value = "";
-        input.placeholder = "さらに絞り込む...";
-      }
-      
-      if (clearBtn) clearBtn.style.display = "block";
-      
-      loadTimeline();
-    }
-
-    function clearFilter() {
-      currentSearchTag = "";
-      currentSearchUser = "";
-      currentSearchQuery = "";
-      
-      const label = document.getElementById('filter-label');
-      const input = document.getElementById('search-input');
-      const clearBtn = document.getElementById('clear-btn');
-      
-      if (label) label.style.display = "none";
       if (input) {
         input.value = "";
         input.placeholder = "検索...";
       }
+      
+      // 2. 検索窓の×ボタンを隠す
+      const clearBtn = document.getElementById('clear-btn');
       if (clearBtn) clearBtn.style.display = "none";
       
+      // 3. ユーザーヘッダーを完全に隠す
+      const header = document.getElementById('user-filter-header');
+      const label = document.getElementById('filter-label'); // もし残っていれば
+      if (header) header.style.display = "none";
+      if (label) label.style.display = "none";
+      
+      // 4. ページトップへスクロール
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // 5. タイムライン再読み込み
       loadTimeline();
     }
   </script>
