@@ -6,141 +6,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.css">
   <style>
+    /* 基本設定 */
     body { font-family: sans-serif; background: #fff; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
     .container { max-width: 700px; margin: 0 auto; }
-    input, textarea, button { border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-    button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; }
-    button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
     
+    /* 共通フォームパーツ */
+    input, textarea, button { border: 1px solid #ddd; border-radius: 4px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
+    button { background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; transition: opacity 0.2s; }
+    button:hover { opacity: 0.8; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    
+    /* セカンダリボタン（返信・いいねなど） */
+    .secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; font-weight: normal; }
     .btn-like { transition: all 0.2s; background: #fdfdfd; border: 1px solid #eee; }
     .btn-like:hover { background: #fff0f0; border-color: #ffbaba; }
     .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
-    .btn-cancel { background: #5cb85c; }
+    .btn-cancel { background: #5cb85c; display: none; }
     
+    /* 検索・フィルターエリア */
+    .search-wrapper { margin-bottom: 20px; position: relative; max-width: 400px; }
+    .search-input { border-radius: 24px; padding-right: 35px; }
+    .clear-icon-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; color: #aaa; font-size: 18px; width: auto; margin: 0; padding: 5px; display: none; }
+    
+    .filter-header { display: none; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border: 1px solid #eee; border-radius: 30px; }
+    .filter-header button { background: none; color: #333; font-size: 20px; width: auto; margin: 0; padding: 0 10px; }
+    .filter-text { font-weight: bold; font-size: 14px; }
+
+    /* ポストカード */
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; position: relative; background: #fff; }
-    .post-card:has(.post-menu[style*="display: block"]) { z-index: 100; }
-    .post-card.hidden-post { opacity: 0.7; background: #fdfdfd; }    
-    
-    .repost-label { font-size: 11px; color: #5cb85c; font-weight: bold; margin-bottom: 5px; }
+    .post-card.hidden-post { opacity: 0.7; background: #fdfdfd; }
     .post-header { font-size: 14px; color: #777; margin-bottom: 5px; }
+    .post-id { background: #f4f4f4; padding: 2px 4px; margin-right: 5px; border-radius: 2px; }
     .user-name { font-weight: bold; color: #333; }
-    .post-id { background: #f4f4f4; padding: 2px 4px; margin-right: 5px; }
+    .user-id-link { margin-left: 5px; color: #777; cursor: pointer; }
+    .user-id-link:hover { color: #007bff; text-decoration: underline; }
+    .post-time { margin-left: 10px; color: #999; font-size: 0.85em; cursor: default; }
+    .post-time:hover { text-decoration: underline; }
+    .repost-label { font-size: 11px; color: #5cb85c; font-weight: bold; margin-bottom: 5px; }
     
-    .reply-container { border-left: 2px solid #eee; margin-left: 0px; padding-left: 14px; display: none; }
-    .omission-bar { font-size: 11px; color: #aaa; text-align: center; margin: 10px 0; border-top: 1px dashed #eee; }
+    /* メニュー */
+    .menu-trigger { position: absolute; top: 10px; right: 10px; cursor: pointer; padding: 0 10px; color: #888; font-size: 22px; z-index: 10; }
+    .post-menu { display: none; position: absolute; top: 35px; right: 10px; background: white; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; border-radius: 6px; min-width: 180px; overflow: hidden; }
+    .post-menu button { display: block; width: 100%; padding: 12px 15px; text-align: left; background: white; color: #333; border-bottom: 1px solid #eee; font-size: 13px; font-weight: normal; margin-bottom: 0; border-radius: 0; }
+    .post-menu button:hover { background: #f5f5f5; }
+    .post-menu button:last-child { border-bottom: none; }
+
+    /* コンテンツ・引用 */
+    .post-content { word-break: break-all; }
+    .hashtag { color: #007bff; cursor: pointer; }
+    .hashtag:hover { text-decoration: underline; }
+    .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; font-size: 0.9em; cursor: pointer; }
+    .quote-header { display: flex; align-items: center; margin-bottom: 5px; color: #666; font-size: 0.85em; gap: 5px; }
+    
+    /* 返信エリア */
+    .reply-container { border-left: 2px solid #eee; margin-left: 0; padding-left: 14px; display: none; }
+    .reply-form-box { margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa; }
     .form-row { display: flex; gap: 10px; }
     
-    .menu-trigger { position: absolute; top: 10px; right: 10px; cursor: pointer; padding: 5px; color: #888; z-index: 10; }
-    .post-menu {
-      display: none; position: absolute; top: 35px; right: 10px; background: white; 
-      border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; 
-      border-radius: 6px; min-width: 180px; overflow: hidden;
-    }
-    .post-menu button {
-      display: block; width: 100%; padding: 12px 15px; text-align: left; 
-      background: white !important; color: #333 !important; border: none; 
-      border-bottom: 1px solid #eee; font-size: 13px; cursor: pointer; font-weight: normal; margin-bottom: 0 !important;
-    }
-    .post-menu button:hover { background: #f5f5f5 !important; }
-
-    .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #eee; border-radius: 8px; background-color: #fafafa; font-size: 0.9em; }
-    .quote-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 5px; color: #666; font-size: 0.85em; gap: 5px; }
-    .quote-content { color: #333; word-break: break-all; }
-    .quote-content p { margin: 2px 0; }
-    .post-time {
-      font-weight: normal;
-      cursor: default;
-    }
-    .post-time:hover {
-      text-decoration: underline;
-    }
-    .hashtag {
-      color: #007bff;
-      cursor: pointer;
-    }
-    .hashtag:hover {
-      text-decoration: underline;
-    }
-    .user-id-link {
-      margin-left:5px; 
-      color:#777; 
-      cursor:pointer;
-    }
-    .user-id-link:hover {
-      color: #007bff;
-      text-decoration: underline;
-    }
-    .search-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      max-width: 300px;
-      border: 1px solid #ddd;
-      border-radius: 24px;
-      padding: 4px 8px;
-    }
-    /* 検索エリアの微調整 */
-    #search-area {
-      display: flex;
-      align-items: center;
-      background: #fff;
-    }
-    #search-input {
-      width: 100%;
-      margin-bottom: 0 !important;
-    }
-    #clear-btn {
-      width: auto !important; /* 100%を解除 */
-      margin-bottom: 0;
-      padding: 0 8px;
-      height: 30px;
-      display: none; /* JSで制御 */
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%; /* 丸くする */
-    }
-    #clear-btn:hover {
-      background: #ddd;
-      color: #333;
-    }
-    /* ユーザーヘッダー自体の見た目調整 */
-    #user-filter-header {
-      display: none; /* 初期状態は隠す */
-      align-items: center;
-      background: #f8f9fa;
-      border: 1px solid #eee;
-      padding: 8px 15px;
-      border-radius: 30px;
-      margin-bottom: 20px;
-    }
-    /* ユーザーフィルターヘッダー内の矢印ボタン */
-    #user-filter-header button {
-      width: auto !important;
-      padding: 0 10px;
-      margin: 0;
-      background: transparent;
-      color: #333;
-      font-size: 24px; /* 矢印を少し大きく */
-    }
-
-    #user-filter-header button:hover {
-      background: #ddd;
-    }
+    /* メッセージ */
+    .empty-msg { padding: 20px; color: #999; text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div id="user-filter-header" style="display:none; align-items:center; gap:10px; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:2px;">
-      <button onclick="clearFilter()" style="background:none; border:none; cursor:pointer; font-size:20px;">←</button>
-      <span id="user-filter-text" style="font-weight:bold;"></span>
+    <div id="user-filter-header" class="filter-header">
+      <button onclick="clearFilter()">←</button>
+      <span id="user-filter-text" class="filter-text"></span>
     </div>
 
-    <div id="search-area" style="margin-bottom: 20px; position: relative; max-width: 400px;">
-      <input type="text" id="search-input" placeholder="検索..." 
-             style="width:100%; padding:10px 35px 10px 12px; border:1px solid #ddd; border-radius:24px; outline:none;"
-             onkeydown="if(event.key==='Enter') execSearch()">
-      <button id="clear-btn" onclick="clearFilter()" 
-              style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#aaa; cursor:pointer; display:none; font-size:18px;">&times;</button>
+    <div id="search-area" class="search-wrapper">
+      <input type="text" id="search-input" class="search-input" placeholder="検索..." onkeydown="if(event.key==='Enter') execSearch()">
+      <button id="clear-btn" class="clear-icon-btn" onclick="clearFilter()">&times;</button>
     </div>
 
     <div id="editor">
@@ -149,12 +85,11 @@
         <input type="password" id="userId" placeholder="秘密コード">
       </div>
       <textarea id="content" rows="3" placeholder="今なにしてる？"></textarea>
-  
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
-      <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
+      <button id="cancel-btn" class="btn-cancel" onclick="stopEdit()">キャンセル</button>
     </div>
 
-    <div id="timeline">読み込み中...</div>
+    <div id="timeline" class="empty-msg">読み込み中...</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
@@ -162,9 +97,9 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbylR6w0U-fMGwHSggjdGw3jWR8F1eCCYoUGZskh6O6cpKwI7z12R3eIIggbcX6U0ZKo/exec"; 
     const md = window.markdownit();
 
-    let currentSearchTag = ""; // ハッシュタグ用
-    let currentSearchUser = ""; // ユーザーID用
-    let currentSearchQuery = ""; // 自由ワード検索用
+    let currentSearchTag = "";
+    let currentSearchUser = "";
+    let currentSearchQuery = "";
 
     window.onload = () => {
       document.getElementById('displayName').value = localStorage.getItem('displayName') || '';
@@ -181,24 +116,23 @@
     }
 
     async function loadTimeline() {
-      // 1. 検索条件やユーザー情報を一つのオブジェクトにまとめる
       const userId = document.getElementById('userId').value;
       const requestData = {
-        parentId: "", // タイムラインなので基本は空
+        parentId: "",
         userId: userId,
-        searchTag: currentSearchTag,   // ハッシュタグ
-        searchUser: currentSearchUser, // ユーザーID絞り込み
-        searchQuery: currentSearchQuery // ワード検索
+        searchTag: currentSearchTag,
+        searchUser: currentSearchUser,
+        searchQuery: currentSearchQuery
       };
-      // 2. GASを呼び出す（1回だけでOK！）
+      
       const posts = await callGas("fetchPosts", requestData);
-      // 3. 画面（タイムライン）をクリアして描画する
       const tl = document.getElementById('timeline');
       tl.innerHTML = '';
+      
       if (posts && posts.length > 0) {
         posts.forEach(p => tl.appendChild(renderPost(p)));
       } else {
-        tl.innerHTML = '<div style="padding:20px; color:#999; text-align:center;">投稿が見つかりませんでした</div>';
+        tl.innerHTML = '<div class="empty-msg">投稿が見つかりませんでした</div>';
       }
     }
 
@@ -207,7 +141,6 @@
       div.className = 'post-card';
       if (p.is_hidden === "TRUE") div.classList.add('hidden-post');
   
-      // リポストでもIDがぶつからないようにユニークキーを作成
       const uniqueKey = p.is_repost ? `rp-${p.post_id}-${new Date(p.timestamp).getTime()}` : p.post_id;
       div.id = `card-${uniqueKey}`; 
 
@@ -219,7 +152,7 @@
 
       div.innerHTML = `
         ${repostHtml}
-        <div class="menu-trigger" style="font-size: 22px; padding: 0 10px;" onclick="toggleMenu('${uniqueKey}')">⋮</div>
+        <div class="menu-trigger" onclick="toggleMenu('${uniqueKey}')">⋮</div>
         <div class="post-menu" id="menu-${uniqueKey}">
           <button onclick="copyToEmbed('${postIdStr}')">埋め込みリンクをコピー</button>
           <button onclick="copyToExternal('${postIdStr}')">外部用リンクをコピー</button>
@@ -234,10 +167,10 @@
         </div>
 
         <div class="post-header">
-          <span class="post-id" style="margin-left:5px;">#${postIdStr}</span>
+          <span class="post-id">#${postIdStr}</span>
           <span class="user-name">${p.display_name}</span> 
           <span class="user-id-link" onclick="setFilterUser('${p.user_hash}')">ID:${p.user_hash}</span>
-          <span class="post-time" style="margin-left:10px; color:#999; font-size:0.85em;">${relativeTime}</span>
+          <span class="post-time">${relativeTime}</span>
           ${p.is_hidden === "TRUE" ? " <small style='color:red;'>(非表示)</small>" : ""}
         </div>
         
@@ -246,9 +179,7 @@
         </div>
         
         <div class="post-footer">
-          <button class="secondary" 
-                  id="btn-${uniqueKey}" 
-                  onclick="toggleReplies('${postIdStr}', '${uniqueKey}')" 
+          <button class="secondary" id="btn-${uniqueKey}" onclick="toggleReplies('${postIdStr}', '${uniqueKey}')" 
                   style="display: ${p.replyCount > 0 ? 'inline-block' : 'none'};">
             返信を表示 (${p.replyCount || 0})
           </button>
@@ -289,9 +220,9 @@
       const container = document.getElementById(`reply-form-container-${uniqueKey}`);
       if (container.innerHTML !== "") { container.innerHTML = ""; return; }
       container.innerHTML = `
-        <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa;">
-          <textarea id="reply-content-${uniqueKey}" rows="2" placeholder="#${postId} への返信" style="width:100%; margin-bottom:5px;"></textarea>
-          <button class="secondary" style="width:100%; background:#333; color:#fff;" onclick="submitReply('${postId}', '${uniqueKey}')">返信を送信</button>
+        <div class="reply-form-box">
+          <textarea id="reply-content-${uniqueKey}" rows="2" placeholder="#${postId} への返信"></textarea>
+          <button style="width:100%; margin-bottom:0;" onclick="submitReply('${postId}', '${uniqueKey}')">返信を送信</button>
         </div>`;
     }
 
@@ -354,12 +285,10 @@
 
       if (!data.content.trim()) return;
 
-      // --- 送信中の演出 ---
       const originalText = btn.innerText;
       btn.disabled = true;
       btn.innerText = "送信中...";
 
-      // 入力情報を保存
       localStorage.setItem('displayName', data.displayName);
       localStorage.setItem('userId', data.userId);
 
@@ -367,15 +296,13 @@
         const res = await callGas("addNewPost", data);
         if (res.success) {
           contentField.value = '';
-          await loadTimeline(); // タイムラインを再読み込み
+          await loadTimeline();
         } else {
           alert("投稿に失敗しました: " + (res.error || "不明なエラー"));
         }
       } catch (e) {
-        console.error(e);
         alert("通信エラーが発生しました");
       } finally {
-        // --- 状態を元に戻す ---
         btn.disabled = false;
         btn.innerText = originalText;
       }
@@ -401,31 +328,28 @@
       document.querySelectorAll('.post-menu').forEach(m => m.style.display = 'none');
       menu.style.display = isVisible ? 'none' : 'block';
       if (!isVisible) {
-        setTimeout(() => { window.onclick = (e) => { if(!menu.contains(e.target)){ menu.style.display = 'none'; window.onclick = null; } }; }, 10);
+        setTimeout(() => { 
+          window.onclick = (e) => { 
+            if(!menu.contains(e.target) && !e.target.classList.contains('menu-trigger')){ 
+              menu.style.display = 'none'; 
+              window.onclick = null; 
+            } 
+          }; 
+        }, 10);
       }
     }
 
     function parseContent(content) {
       if (!content) return "";
-
-      // 1. まずは画像URLをMarkdownで扱いやすい形に整理（改行を入れる）
       const imgRegex = /(https?:\/\/[^\s]+\.(?:jp?g|png|gif|webp|bmp))/gi;
-      let textWithImages = content.replace(imgRegex, (url) => {
-        return `\n\n![](${url})\n\n`;
-      });
-      // 2. Markdownを適用してHTMLに変換
+      let textWithImages = content.replace(imgRegex, (url) => `\n\n![](${url})\n\n`);
       let html = md.render(textWithImages);
-      // 3. 出来上がったHTMLに対して、ハッシュタグをリンクに書き換える
-      html = html.replace(/#([^\s#<]+)/g, '<span class="hashtag" style="color:#007bff; cursor:pointer;" onclick="setFilterTag(\'$1\')">#$1</span>');
-      // 4. 引用リンクの置換 (lett/post/ID)
-      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => 
-        `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`
-      );
-      // 埋め込みの読み込みを予約
+      html = html.replace(/#([^\s#<]+)/g, '<span class="hashtag" onclick="setFilterTag(\'$1\')">#$1</span>');
+      html = html.replace(/lett\/post\/([\w-]+)/g, (match, id) => `<div class="embedded-post" data-embed-id="${id}">読み込み中...</div>`);
       setTimeout(() => loadEmbeds(), 100);
-
       return html;
     }
+
     async function loadEmbeds() {
       const embeds = document.querySelectorAll('.embedded-post:not(.loaded)');
       for (const el of embeds) {
@@ -434,20 +358,19 @@
         const posts = await callGas("fetchPosts", { parentId: "", userId: "", postId: id });
         if (posts && posts.length > 0) {
           const p = posts[0];
-          const renderedContent = parseContent(p.content || "");
           const relativeTime = getRelativeTime(p.timestamp);
           el.innerHTML = `
             <div class="quote-card" onclick="location.href='#card-${p.post_id}'">
               <div class="quote-header">
-                <span class="post-id" style="margin-left:5px;">#${p.post_id}</span>
+                <span class="post-id">#${p.post_id}</span>
                 <span class="user-name">${p.display_name}</span> 
-                <span style="margin-left:5px; color:#777;">ID:${p.user_hash}</span>
-                <span style="margin-left:10px; color:#999; font-size:0.85em;">${relativeTime}</span>
+                <span>ID:${p.user_hash}</span>
+                <span class="post-time">${relativeTime}</span>
               </div>
               <div class="quote-content">${parseContent(p.content || "")}</div>
             </div>`;
         } else {
-          el.innerHTML = `<div class="quote-card-error">引用元が見つかりません (#${id})</div>`;
+          el.innerHTML = `<div class="quote-card" style="color:#999; cursor:default;">引用元が見つかりません (#${id})</div>`;
         }
       }
     }
@@ -463,29 +386,18 @@
     function copyToEmbed(postId) { navigator.clipboard.writeText(`lett/post/${postId}`); alert("コピーしました"); }
     function copyToExternal(postId) { navigator.clipboard.writeText(`${window.location.href.split('#')[0]}#card-${postId}`); alert("URLをコピーしました"); }
 
-    // 編集開始：入力欄に内容をセットしてスクロール
     function startEdit(postId, uniqueKey) {
       const contentField = document.getElementById('content');
       const submitBtn = document.getElementById('submit-btn');
       const cancelBtn = document.getElementById('cancel-btn');
-  
-      // 1. data-rawから生のMarkdownを取得
       const card = document.getElementById(`card-${uniqueKey}`);
-      const contentDiv = card.querySelector('.post-content');
-      const rawContent = contentDiv.getAttribute('data-raw');
+      const rawContent = card.querySelector('.post-content').getAttribute('data-raw');
   
-      // 2. 入力欄にセット
       contentField.value = rawContent;
-  
-      // 3. ボタンの表示切り替え（ここが動かない場合はIDの不一致）
       submitBtn.innerText = "更新する";
-      // onclickを上書き
       submitBtn.onclick = function() { updatePost(postId, this); };
       cancelBtn.style.display = "block"; 
-  
-      // 4. 入力欄（エディタ）へスクロール
-      const editor = document.getElementById('editor');
-      editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
       contentField.focus();
     }
 
@@ -493,149 +405,84 @@
       const contentField = document.getElementById('content');
       const submitBtn = document.getElementById('submit-btn');
       const cancelBtn = document.getElementById('cancel-btn');
-  
       contentField.value = "";
       submitBtn.innerText = "投稿する";
       submitBtn.onclick = () => submitPost(submitBtn);
-      cancelBtn.style.display = "none"; // キャンセルボタンを隠す
+      cancelBtn.style.display = "none";
     }
-    // 編集実行
+
     async function updatePost(postId, btn) {
       const contentField = document.getElementById('content');
-      const data = {
-        postId: postId,
-        userId: document.getElementById('userId').value,
-        content: contentField.value
-      };
+      const data = { postId, userId: document.getElementById('userId').value, content: contentField.value };
       if (!data.content.trim()) return;
-
       btn.disabled = true;
       btn.innerText = "更新中...";
-
       try {
         const res = await callGas("editPost", data);
-        if (res.success) {
-          stopEdit(); // 入力欄のリセットとボタン復元
-          await loadTimeline();
-        } else {
-          alert(res.error);
-          btn.disabled = false;
-          btn.innerText = "更新する";
-        }
-      } catch (e) {
-       alert("通信エラー");
-        btn.disabled = false;
-      }
+        if (res.success) { stopEdit(); await loadTimeline(); }
+        else { alert(res.error); btn.disabled = false; btn.innerText = "更新する"; }
+      } catch (e) { alert("通信エラー"); btn.disabled = false; }
     }
 
     function getRelativeTime(dateString) {
       const now = new Date();
       const posted = new Date(dateString);
-      const diffMs = now - posted;
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      const diffHour = Math.floor(diffMin / 60);
-      const diffDay = Math.floor(diffHour / 24);
-
+      const diffSec = Math.floor((now - posted) / 1000);
       if (diffSec < 60) return 'たった今';
+      const diffMin = Math.floor(diffSec / 60);
       if (diffMin < 60) return `${diffMin}分前`;
+      const diffHour = Math.floor(diffMin / 60);
       if (diffHour < 24) return `${diffHour}時間前`;
+      const diffDay = Math.floor(diffHour / 24);
       if (diffDay < 7) return `${diffDay}日前`;
-      
-      // 1週間以上経っていたら普通の日付表示
       return posted.toLocaleDateString();
     }
 
-// タグをクリックした時
     function setFilterTag(tag) {
       const input = document.getElementById('search-input');
       const fullTag = "#" + tag;
       if (input) input.value = fullTag;
-      
       currentSearchTag = fullTag;
       currentSearchQuery = "";
       currentSearchUser = "";
-      
-      // タグ時はユーザーヘッダーを隠す
-      const header = document.getElementById('user-filter-header');
-      if (header) header.style.display = "none";
-      
-      const clearBtn = document.getElementById('clear-btn');
-      if (clearBtn) clearBtn.style.display = "block";
-
-      // ★ ページトップへ移動
+      document.getElementById('user-filter-header').style.display = "none";
+      document.getElementById('clear-btn').style.display = "block";
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
       loadTimeline();
     }
 
-    // ユーザーIDをクリックした時
     function setFilterUser(userHash) {
       currentSearchUser = userHash;
       currentSearchTag = "";
       currentSearchQuery = "";
-      
-      // 検索欄をクリア
       document.getElementById('search-input').value = "";
-      if (document.getElementById('clear-btn')) {
-        document.getElementById('clear-btn').style.display = "none";
-      }
-
-      // ヘッダーを表示
+      document.getElementById('clear-btn').style.display = "none";
       const header = document.getElementById('user-filter-header');
-      const text = document.getElementById('user-filter-text');
-      if (header && text) {
-        text.innerText = `ID:${userHash} の投稿を表示中`;
-        header.style.display = "flex"; // ここで表示
-      }
-
-      // ★ ページトップへ移動
+      document.getElementById('user-filter-text').innerText = `ID:${userHash} の投稿を表示中`;
+      header.style.display = "flex";
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
       loadTimeline();
     }
 
-    // 自由ワード検索
     function execSearch() {
       const q = document.getElementById('search-input').value.trim();
       if (!q) return;
-      
       currentSearchQuery = q;
-      currentSearchTag = ""; // 他の絞り込みは解除
+      currentSearchTag = "";
       currentSearchUser = "";
-      
       document.getElementById('user-filter-header').style.display = "none";
-      showSearchClearBtn(true);
+      document.getElementById('clear-btn').style.display = "block";
       loadTimeline();
     }
 
-    // 全て解除（戻るボタンや×ボタン）
     function clearFilter() {
       currentSearchTag = "";
       currentSearchUser = "";
       currentSearchQuery = "";
-      
-      // 1. 入力欄をリセット
-      const input = document.getElementById('search-input');
-      if (input) {
-        input.value = "";
-        input.placeholder = "検索...";
-      }
-      
-      // 2. 検索窓の×ボタンを隠す
-      const clearBtn = document.getElementById('clear-btn');
-      if (clearBtn) clearBtn.style.display = "none";
-      
-      // 3. ユーザーヘッダーを完全に隠す
-      const header = document.getElementById('user-filter-header');
-      const label = document.getElementById('filter-label'); // もし残っていれば
-      if (header) header.style.display = "none";
-      if (label) label.style.display = "none";
-      
-      // 4. ページトップへスクロール
+      document.getElementById('search-input').value = "";
+      document.getElementById('clear-btn').style.display = "none";
+      document.getElementById('user-filter-header').style.display = "none";
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // 5. タイムライン再読み込み
       loadTimeline();
     }
   </script>
