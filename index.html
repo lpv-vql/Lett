@@ -118,11 +118,12 @@
   </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <div id="user-filter-header" style="display:none; align-items:center; gap:10px; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px;">
       <button onclick="clearFilter()" style="background:none; border:none; cursor:pointer; font-size:20px;">←</button>
       <span id="user-filter-text" style="font-weight:bold;"></span>
     </div>
+
     <div id="search-area" style="margin-bottom: 20px; position: relative; max-width: 400px;">
       <input type="text" id="search-input" placeholder="検索..." 
              style="width:100%; padding:10px 35px 10px 12px; border:1px solid #ddd; border-radius:8px; outline:none;"
@@ -130,13 +131,7 @@
       <button id="clear-btn" onclick="clearFilter()" 
               style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#aaa; cursor:pointer; display:none; font-size:18px;">&times;</button>
     </div>
-    <div id="search-area" style="margin-bottom: 20px;">
-      <div class="search-container">
-        <span id="filter-label" style="display:none;"></span>
-        <input type="text" id="search-input" placeholder="検索..." onkeydown="if(event.key==='Enter') execSearch()">
-        <button id="clear-btn" onclick="clearFilter()" title="検索を解除">&times;</button>
-      </div>
-    </div>
+
     <div id="editor">
       <div class="form-row">
         <input type="text" id="displayName" placeholder="表示名">
@@ -147,6 +142,7 @@
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
       <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
     </div>
+
     <div id="timeline">読み込み中...</div>
   </div>
 
