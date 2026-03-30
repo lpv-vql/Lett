@@ -79,41 +79,54 @@
       border-radius: 24px;
       padding: 4px 8px;
     }
-    #filter-label {
-      background: #007bff;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 0.8em;
-      white-space: nowrap;
-      margin-right: 8px;
+    /* 検索エリアの微調整 */
+    #search-area {
       display: flex;
       align-items: center;
+      background: #fff;
     }
     #search-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px;
-      outline: none;
-      font-size: 16px;
-      margin-bottom: 0px;
-    }
-    #search-input:focus {
-      border-color: #007bff;
+      width: 100%;
+      margin-bottom: 0 !important;
     }
     #clear-btn {
-      background: transparent;
-      border: none;
-      font-size: 20px;
-      color: #5f6368;
-      cursor: pointer;
+      width: auto !important; /* 100%を解除 */
+      margin-bottom: 0;
       padding: 0 8px;
-      display: none;
+      height: 30px;
+      display: none; /* JSで制御 */
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%; /* 丸くする */
     }
     #clear-btn:hover {
       background: #ddd;
       color: #333;
+    }
+    /* ユーザーフィルターヘッダー内の矢印ボタン */
+    #user-filter-header button {
+      width: auto !important; /* 100%を解除 */
+      margin-bottom: 0;
+      padding: 5px 12px;
+      background: #eee; /* 薄いグレー */
+      color: #333;
+      border-radius: 20px;
+      transition: background 0.2s;
+    }
+
+    #user-filter-header button:hover {
+      background: #ddd;
+    }
+
+    /* ユーザーヘッダー自体の見た目調整 */
+    #user-filter-header {
+      display: none; /* JSで制御 */
+      align-items: center;
+      background: #f8f9fa;
+      border: 1px solid #eee;
+      padding: 8px 15px;
+      border-radius: 30px; /* 角を丸く */
+      margin-bottom: 20px;
     }
   </style>
 </head>
