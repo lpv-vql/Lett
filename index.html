@@ -130,14 +130,14 @@
 </head>
 <body>
   <div class="container">
-    <div id="user-filter-header" style="display:none; align-items:center; gap:10px; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:24px;">
+    <div id="user-filter-header" style="display:none; align-items:center; gap:10px; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:2px;">
       <button onclick="clearFilter()" style="background:none; border:none; cursor:pointer; font-size:20px;">←</button>
       <span id="user-filter-text" style="font-weight:bold;"></span>
     </div>
 
     <div id="search-area" style="margin-bottom: 20px; position: relative; max-width: 400px;">
       <input type="text" id="search-input" placeholder="検索..." 
-             style="width:100%; padding:10px 35px 10px 12px; border:1px solid #ddd; border-radius:8px; outline:none;"
+             style="width:100%; padding:10px 35px 10px 12px; border:1px solid #ddd; border-radius:24px; outline:none;"
              onkeydown="if(event.key==='Enter') execSearch()">
       <button id="clear-btn" onclick="clearFilter()" 
               style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#aaa; cursor:pointer; display:none; font-size:18px;">&times;</button>
