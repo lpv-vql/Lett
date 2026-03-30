@@ -517,52 +517,41 @@
       return posted.toLocaleDateString();
     }
 
+    // 2. タグをクリックした時（ユーザー絞り込み中なら、その中でのタグ絞り込みにする）
     function setFilterTag(tag) {
-      const input = document.getElementById('search-input');
       const fullTag = "#" + tag;
+      currentSearchTag = fullTag;
+      currentSearchQuery = ""; // ワード検索とタグ検索は排他（混ぜると複雑なため）
+
+      const input = document.getElementById('search-input');
       if (input) input.value = fullTag;
       
-      currentSearchTag = fullTag;
-      currentSearchQuery = "";
-      currentSearchUser = "";
-      
-      document.getElementById('user-filter-header').style.display = "none";
-      document.getElementById('clear-btn').style.display = "block";
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      loadTimeline();
+      updateFilterUI();
     }
-
+    
+    // 1. ユーザーIDをクリックした時（既存のタグ・ワード検索はリセットしてユーザー優先）
     function setFilterUser(userHash) {
       currentSearchUser = userHash;
+      // ユーザーを切り替える時は一旦他の検索はクリアするのが一般的
       currentSearchTag = "";
       currentSearchQuery = "";
       
-      document.getElementById('search-input').value = "";
-      document.getElementById('clear-btn').style.display = "none";
-
-      const header = document.getElementById('user-filter-header');
-      const text = document.getElementById('user-filter-text');
-      if (header && text) {
-        text.innerText = `ID:${userHash} の投稿を表示中`;
-        header.style.display = "flex";
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      loadTimeline();
+      const input = document.getElementById('search-input');
+      if (input) input.value = "";
+      
+      updateFilterUI(); // UI更新用に関数化
     }
 
+    // 3. 検索窓でEnterを押した時（ユーザー絞り込み中なら、その中でのワード検索にする）
     function execSearch() {
       const q = document.getElementById('search-input').value.trim();
-      if (!q) return;
-      
       currentSearchQuery = q;
-      currentSearchTag = "";
-      currentSearchUser = "";
-      
-      document.getElementById('user-filter-header').style.display = "none";
-      document.getElementById('clear-btn').style.display = "block";
-      loadTimeline();
+      currentSearchTag = ""; // タグ検索はワード検索で上書き
+
+      updateFilterUI();
     }
 
+    // 5. 検索解除（全解除）
     function clearFilter() {
       currentSearchTag = "";
       currentSearchUser = "";
@@ -574,11 +563,36 @@
         input.placeholder = "検索...";
       }
       
-      document.getElementById('clear-btn').style.display = "none";
-      document.getElementById('user-filter-header').style.display = "none";
+      updateFilterUI();
+    }
+
+    // 4. UIの状態をまとめて管理する関数
+    function updateFilterUI() {
+      const header = document.getElementById('user-filter-header');
+      const text = document.getElementById('user-filter-text');
+      const clearBtn = document.getElementById('clear-btn');
+      const input = document.getElementById('search-input');
+
+      // ユーザー絞り込みヘッダーの制御
+      if (currentSearchUser) {
+        if (header && text) {
+          text.innerText = `ID:${currentSearchUser} 内を検索中`;
+          header.style.display = "flex";
+        }
+      } else {
+        if (header) header.style.display = "none";
+      }
+
+      // 検索窓の×ボタンの制御
+      if (clearBtn) {
+        clearBtn.style.display = (currentSearchTag || currentSearchQuery) ? "block" : "none";
+      }
+
+      // 常にトップへ戻って再読み込み
       window.scrollTo({ top: 0, behavior: 'smooth' });
       loadTimeline();
     }
+    
   </script>
 </body>
 </html>
