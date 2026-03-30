@@ -103,30 +103,29 @@
       background: #ddd;
       color: #333;
     }
-    /* ユーザーフィルターヘッダー内の矢印ボタン */
-    #user-filter-header button {
-      width: auto !important; /* 100%を解除 */
-      margin-bottom: 0;
-      padding: 5px 12px;
-      background: #eee; /* 薄いグレー */
-      color: #333;
-      border-radius: 20px;
-      transition: background 0.2s;
-    }
-
-    #user-filter-header button:hover {
-      background: #ddd;
-    }
-
     /* ユーザーヘッダー自体の見た目調整 */
     #user-filter-header {
-      display: none; /* JSで制御 */
+      display: none; /* 初期状態は隠す */
       align-items: center;
       background: #f8f9fa;
       border: 1px solid #eee;
       padding: 8px 15px;
-      border-radius: 30px; /* 角を丸く */
+      border-radius: 30px;
       margin-bottom: 20px;
+      width: fit-content; /* 中身の幅に合わせる */
+    }
+    /* ユーザーフィルターヘッダー内の矢印ボタン */
+    #user-filter-header button {
+      width: auto !important;
+      padding: 0 10px;
+      margin: 0;
+      background: transparent;
+      color: #333;
+      font-size: 24px; /* 矢印を少し大きく */
+    }
+
+    #user-filter-header button:hover {
+      background: #ddd;
     }
   </style>
 </head>
@@ -552,13 +551,22 @@
     function setFilterTag(tag) {
       const input = document.getElementById('search-input');
       const fullTag = "#" + tag;
-      input.value = fullTag; // 検索欄に #tag を入れる
+      if (input) input.value = fullTag;
+      
       currentSearchTag = fullTag;
-      currentSearchQuery = ""; // ワード検索はリセット
+      currentSearchQuery = "";
       currentSearchUser = "";
       
-      showSearchClearBtn(true);
-      document.getElementById('user-filter-header').style.display = "none";
+      // タグ時はユーザーヘッダーを隠す
+      const header = document.getElementById('user-filter-header');
+      if (header) header.style.display = "none";
+      
+      const clearBtn = document.getElementById('clear-btn');
+      if (clearBtn) clearBtn.style.display = "block";
+
+      // ★ ページトップへ移動
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
       loadTimeline();
     }
 
@@ -568,15 +576,22 @@
       currentSearchTag = "";
       currentSearchQuery = "";
       
-      // 検索欄は空にする
+      // 検索欄をクリア
       document.getElementById('search-input').value = "";
-      showSearchClearBtn(false);
+      if (document.getElementById('clear-btn')) {
+        document.getElementById('clear-btn').style.display = "none";
+      }
 
-      // 上部のユーザーヘッダーを表示
+      // ヘッダーを表示
       const header = document.getElementById('user-filter-header');
       const text = document.getElementById('user-filter-text');
-      text.innerText = `ID:${userHash} の投稿を表示中`;
-      header.style.display = "flex";
+      if (header && text) {
+        text.innerText = `ID:${userHash} の投稿を表示中`;
+        header.style.display = "flex"; // ここで表示
+      }
+
+      // ★ ページトップへ移動
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       loadTimeline();
     }
@@ -601,15 +616,24 @@
       currentSearchUser = "";
       currentSearchQuery = "";
       
-      document.getElementById('search-input').value = "";
-      document.getElementById('user-filter-header').style.display = "none";
-      showSearchClearBtn(false);
+      // 入力欄をリセット
+      const input = document.getElementById('search-input');
+      if (input) input.value = "";
+      
+      // ×ボタンを隠す
+      const clearBtn = document.getElementById('clear-btn');
+      if (clearBtn) clearBtn.style.display = "none";
+      
+      // ★ ユーザーヘッダーを確実に隠す
+      const header = document.getElementById('user-filter-header');
+      if (header) {
+        header.style.display = "none"; // ここで非表示にする
+      }
+      
+      // ★ ページトップへ移動
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
       loadTimeline();
-    }
-
-    function showSearchClearBtn(show) {
-      document.getElementById('clear-btn').style.display = show ? "block" : "none";
     }
 
     function updateFilterUI(text) {
