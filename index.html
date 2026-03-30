@@ -72,7 +72,7 @@
 <body>
   <div class="container">
     <div id="user-filter-header" class="filter-header">
-      <button onclick="clearFilter()">←</button>
+      <button onclick="clearFilterUser()">←</button>
       <span id="user-filter-text" class="filter-text"></span>
     </div>
 
@@ -554,6 +554,20 @@
     // 5. 検索解除
     function clearFilter() {
       currentSearchTag = "";
+      currentSearchQuery = "";
+      
+      const input = document.getElementById('search-input');
+      if (input) {
+        input.value = "";
+        input.placeholder = "検索...";
+      }
+      
+      updateFilterUI();
+    }
+
+    function clearFilterUser(){
+      currentSearchTag = "";
+      currentSearchUser = "";
       currentSearchQuery = "";
       
       const input = document.getElementById('search-input');
