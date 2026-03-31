@@ -102,15 +102,15 @@
 
       <div id="profile-edit" style="display:none; margin-bottom:10px; padding:10px; border:1px solid #eee; border-radius:2px; background:#fafafa;">
         <div class="form-row">
-          <input type="text" id="displayName" placeholder="表示名" oninput="updateProfileView()">
-          <input type="password" id="userId" placeholder="パスワード" oninput="updateProfileView()">
+          <input type="text" id="displayName" placeholder="表示名" oninput="updateProfileView()" maxlength="20">
+          <input type="password" id="userId" placeholder="パスワード" oninput="updateProfileView()" minlength="8">
         </div>
         <div style="text-align:right;">
           <button class="secondary" onclick="hideProfileEdit()" style="width:auto !important; padding:5px 15px; margin-top:5px; background:#eee; color:#333;">完了</button>
         </div>
       </div>
 
-      <textarea id="content" rows="3" placeholder="投稿を入力..."></textarea>
+      <textarea id="content" rows="3" placeholder="投稿を入力..." maxlength="1000"></textarea>
       
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
       <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
@@ -363,15 +363,48 @@
     }
 
     async function submitPost(btn) {
-      const contentField = document.getElementById('content');
+      const displayName = document.getElementById('displayName').value.trim();
+      const userId = document.getElementById('userId').value.trim();
+      const content = document.getElementById('content').value.trim();
+
+      // --- バリデーションチェック ---
+      
+      // 1. 表示名のチェック
+      if (displayName.length === 0) {
+        alert("表示名を入力してください");
+        showProfileEdit(); // 入力欄を閉じていたら開く
+        return;
+      }
+      if (displayName.length > 20) {
+        alert("表示名は20文字以内で入力してください");
+        showProfileEdit();
+        return;
+      }
+
+      // 2. パスワードのチェック
+      if (userId.length < 8) {
+        alert("秘密コードは8文字以上で入力してください");
+        showProfileEdit();
+        return;
+      }
+
+      // 3. 投稿本文のチェック
+      if (content.length === 0) {
+        alert("本文を入力してください");
+        return;
+      }
+      if (content.length > 1000) {
+        alert("本文は1000文字以内で入力してください");
+        return;
+      }
+
+      // --- チェック合格後の送信処理 ---
       const data = {
-        displayName: document.getElementById('displayName').value,
-        userId: document.getElementById('userId').value,
-        content: contentField.value,
+        displayName: displayName,
+        userId: userId,
+        content: content,
         parentId: "" 
       };
-
-      if (!data.content.trim()) return;
 
       const originalText = btn.innerText;
       btn.disabled = true;
@@ -383,13 +416,14 @@
       try {
         const res = await callGas("addNewPost", data);
         if (res.success) {
-          contentField.value = '';
+          document.getElementById('content').value = '';
+          // 投稿成功時にプロフィール欄を閉じるならここに追加
+          hideProfileEdit(); 
           await loadTimeline();
         } else {
           alert("投稿に失敗しました: " + (res.error || "不明なエラー"));
         }
       } catch (e) {
-        console.error(e);
         alert("通信エラーが発生しました");
       } finally {
         btn.disabled = false;
