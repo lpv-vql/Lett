@@ -58,7 +58,6 @@
     .post-menu { display: none; position: absolute; top: 35px; right: 10px; background: white; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; border-radius: 6px; min-width: 180px; overflow: hidden; }
     .post-menu button { display: block; width: 100%; padding: 12px 15px; text-align: left; background: white; color: #333; border: none; border-bottom: 1px solid #eee; font-size: 13px; font-weight: normal; margin-bottom: 0; border-radius: 0; }
     .post-menu button:hover { background: #f5f5f5; }
-    .post-menu button.danger { color: red; }
 
     /* 引用・返信 */
     .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #eee; border-radius: 2px; background-color: #fafafa; font-size: 0.9em; cursor: pointer; }
@@ -254,7 +253,7 @@
           <button onclick="executeRepost('${postIdStr}')">リポスト</button>
           ${p.isMine ? `
             <button onclick="startEdit('${postIdStr}', '${uniqueKey}')">投稿を編集</button>
-            <button class="danger" onclick="toggleHide('${postIdStr}')">
+            <button onclick="toggleHide('${postIdStr}')">
               ${p.is_hidden === 'TRUE' ? '表示する' : '非表示にする'}
             </button>
           ` : ''}
