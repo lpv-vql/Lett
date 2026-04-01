@@ -9,36 +9,103 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
   <style>
+    /* --- 基本設定 --- */
     html { scroll-behavior: smooth; }
-    /* 基本設定 */
-    body { font-family: "M PLUS Rounded 1c", sans-serif; background: #fff; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
+    body { 
+      font-family: "M PLUS Rounded 1c", sans-serif; 
+      background: #fff; 
+      color: #333; 
+      line-height: 1.6; 
+      margin: 0; 
+      padding: 20px; 
+    }
     .container { max-width: 700px; margin: 0 auto; }
+
+    /* --- フォーム・ボタン --- */
+    input, textarea, button { 
+      font-family: inherit; 
+      border: 1px solid #ddd; 
+      border-radius: 2px; 
+      padding: 10px; 
+      font-size: 14px; 
+      width: 100%; 
+      box-sizing: border-box; 
+      margin-bottom: 10px; 
+      outline: none; 
+    }
+    textarea { resize: vertical; height: 130px; }
     
-    /* フォーム要素 */
-    input, textarea, button { font-family: "M PLUS Rounded 1c", sans-serif; border: 1px solid #ddd; border-radius: 2px; padding: 10px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-    textarea { resize: vertical; height: 130px !important; }
-    button { font-family: "M PLUS Rounded 1c", sans-serif; background: #333; color: #fff; cursor: pointer; border: none; font-weight: bold; transition: opacity 0.2s; }
+    button { 
+      background: #333; 
+      color: #fff; 
+      cursor: pointer; 
+      border: none; 
+      font-weight: bold; 
+      transition: opacity 0.2s; 
+    }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
-    button.secondary { background: #eee; color: #333; width: auto; font-size: 12px; padding: 5px 10px; margin-top: 5px; }
     
-    /* ボタンバリエーション */
+    button.secondary { 
+      background: #eee; 
+      color: #333; 
+      width: auto; 
+      font-size: 12px; 
+      padding: 5px 10px; 
+      margin-top: 5px; 
+    }
+
     .btn-like { transition: all 0.2s; background: #fdfdfd; border: 1px solid #eee; }
     .btn-like:hover { background: #fff0f0; border-color: #ffbaba; }
     .btn-like.active { color: #e0245e; background: #fff0f0; border-color: #ffbaba; }
-    .btn-cancel { background: #5cb85c; display: none; } /* JSで制御 */
+    
+    .btn-cancel { background: #5cb85c; display: none; }
     .btn-submit-reply { width: 100%; background: #333; color: #fff; margin-top: 5px; }
 
-    /* 検索・フィルターエリア */
+    /* --- プロフィールエリア --- */
+    .profile-display {
+      cursor: pointer;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .display-name-view { font-weight: bold; color: #333; }
+    .user-id-view { margin-left: 8px; font-size: 0.85em; color: #888; }
+    .edit-label { font-size: 12px; color: #007bff; }
+
+    .profile-edit {
+      display: none;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 2px;
+      background: #fafafa;
+    }
+    .profile-edit-footer { text-align: right; }
+    .profile-edit-done { width: auto !important; padding: 5px 15px; margin-top: 5px; }
+
+    /* --- 検索・フィルター --- */
     .search-area { margin-bottom: 15px; position: relative; }
-    .search-input { width: 100%; padding: 10px 35px 10px 15px !important; border-radius: 24px !important; }
-    .clear-btn { position: absolute; right: 10px; top: 42%; transform: translateY(-42%); background: none; border: none; color: #aaa; cursor: pointer; display: none; font-size: 18px; width: auto; padding: 0 8px; margin-bottom: 0; }
+    .search-input { width: 100%; padding: 10px 35px 10px 15px; border-radius: 24px; }
+    .clear-btn { 
+      position: absolute; right: 10px; top: 42%; transform: translateY(-42%); 
+      background: none; border: none; color: #aaa; cursor: pointer; 
+      display: none; font-size: 18px; width: auto; padding: 0 8px; margin-bottom: 0; 
+    }
     
-    .filter-header { display: none; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px 15px; border-radius: 2px; background: #fafafa; border: 1px solid #eee; }
+    .filter-header { 
+      display: none; align-items: center; gap: 10px; margin-bottom: 15px; 
+      padding: 10px 15px; border-radius: 2px; background: #fafafa; border: 1px solid #eee; 
+    }
     .filter-header button { width: auto; padding: 0 10px; margin: 0; background: transparent; color: #333; font-size: 24px; }
     .filter-header button:hover { background: #eee; }
     .filter-text { font-weight: bold; }
 
-    /* 投稿カード */
+    /* --- 投稿カード --- */
     .post-card { border-bottom: 1px solid #eee; padding: 15px 0; position: relative; background: #fff; }
     .post-card:has(.post-menu[style*="display: block"]) { z-index: 100; }
     .post-card.hidden-post { opacity: 0.7; background: #fdfdfd; }
@@ -53,13 +120,21 @@
     .hashtag { color: #007bff; cursor: pointer; }
     .status-label-hide { color: red; font-size: small; }
 
-    /* メニュー */
+    /* --- メニュー --- */
     .menu-trigger { position: absolute; top: 10px; right: 10px; cursor: pointer; padding: 0 10px; color: #888; z-index: 10; font-size: 22px; }
-    .post-menu { display: none; position: absolute; top: 35px; right: 10px; background: white; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; border-radius: 6px; min-width: 180px; overflow: hidden; }
-    .post-menu button { display: block; width: 100%; padding: 12px 15px; text-align: left; background: white; color: #333; border: none; border-bottom: 1px solid #eee; font-size: 13px; font-weight: normal; margin-bottom: 0; border-radius: 0; }
+    .post-menu { 
+      display: none; position: absolute; top: 35px; right: 10px; background: white; 
+      border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; 
+      border-radius: 6px; min-width: 180px; overflow: hidden; 
+    }
+    .post-menu button { 
+      display: block; width: 100%; padding: 12px 15px; text-align: left; 
+      background: white; color: #333; border: none; border-bottom: 1px solid #eee; 
+      font-size: 13px; font-weight: normal; margin-bottom: 0; border-radius: 0; 
+    }
     .post-menu button:hover { background: #f5f5f5; }
 
-    /* 引用・返信 */
+    /* --- 引用・返信 --- */
     .quote-card { margin: 10px 0; padding: 12px; border: 1px solid #eee; border-radius: 2px; background-color: #fafafa; font-size: 0.9em; cursor: pointer; }
     .quote-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 5px; color: #666; font-size: 0.85em; gap: 5px; }
     .quote-content { color: #333; word-break: break-all; }
@@ -69,12 +144,11 @@
     .reply-container { border-left: 2px solid #eee; margin-left: 0; padding-left: 14px; display: none; }
     .reply-form-wrapper { margin: 10px 0; padding: 10px; border: 1px solid #eee; background: #fafafa; }
     .form-row { display: flex; gap: 10px; }
-    .timeline-empty { padding: 20px; color: #999; text-align: center; }
-    .loader-dots {
-      font-family: "M PLUS Rounded 1c", sans-serif;
-      font-weight: bold;
-      animation: pulse 1.5s infinite;
-    }
+    
+    /* --- ローダー --- */
+    .loader-wrapper { padding: 40px; color: #666; text-align: center; }
+    .timeline-empty { padding: 40px; color: #999; text-align: center; }
+    .loader-dots { font-weight: bold; animation: pulse 1.5s infinite; }
     @keyframes pulse {
       0% { opacity: 0.5; }
       50% { opacity: 1; }
@@ -95,28 +169,28 @@
     </div>
 
     <div id="editor">
-      <div id="profile-display" onclick="showProfileEdit()" style="cursor:pointer; margin-bottom:10px; padding:10px; background:#fafafa; border:1px solid #eee; border-radius:2px; display:flex; justify-content:space-between; align-items:center;">
+      <div id="profile-display" class="profile-display" onclick="showProfileEdit()">
         <div>
-          <span id="display-name-view" style="font-weight:bold; color:#333;">名前なし</span>
-          <span id="user-id-view" style="margin-left:8px; font-size:0.85em; color:#888;">(ID未設定)</span>
+          <span id="display-name-view" class="display-name-view">名前なし</span>
+          <span id="user-id-view" class="user-id-view">(ID未設定)</span>
         </div>
-        <span style="font-size:12px; color:#007bff;">編集</span>
+        <span class="edit-label">編集</span>
       </div>
 
-      <div id="profile-edit" style="display:none; margin-bottom:10px; padding:10px; border:1px solid #eee; border-radius:2px; background:#fafafa;">
+      <div id="profile-edit" class="profile-edit">
         <div class="form-row">
           <input type="text" id="displayName" placeholder="表示名" oninput="updateProfileView()" maxlength="20">
           <input type="password" id="userId" placeholder="パスワード" oninput="updateProfileView()" minlength="8">
         </div>
-        <div style="text-align:right;">
-          <button class="secondary" onclick="hideProfileEdit()" style="width:auto !important; padding:5px 15px; margin-top:5px; background:#eee; color:#333;">完了</button>
+        <div class="profile-edit-footer">
+          <button class="secondary profile-edit-done" onclick="hideProfileEdit()">完了</button>
         </div>
       </div>
 
       <textarea id="content" rows="3" placeholder="投稿を入力..." maxlength="1000"></textarea>
       
       <button id="submit-btn" onclick="submitPost(this)">投稿する</button>
-      <button id="cancel-btn" class="btn-cancel" style="display:none;" onclick="stopEdit()">キャンセル</button>
+      <button id="cancel-btn" class="btn-cancel" onclick="stopEdit()">キャンセル</button>
     </div>
 
     <div id="timeline">読み込み中...</div>
@@ -135,7 +209,6 @@
     let currentSearchUser = "";
     let currentSearchQuery = "";
 
-    // ページ読み込み時の処理
     window.onload = () => {
       const savedName = localStorage.getItem('displayName');
       const savedId = localStorage.getItem('userId');
@@ -143,13 +216,11 @@
       if (savedName) document.getElementById('displayName').value = savedName;
       if (savedId) document.getElementById('userId').value = savedId;
 
-      // 初めてのアクセス（保存された名前がない）なら編集モードにする
       if (!savedName) {
         showProfileEdit();
       } else {
         updateProfileView();
       }
-
       loadTimeline();
     };
 
@@ -163,18 +234,13 @@
 
     async function loadTimeline() {
       const tl = document.getElementById('timeline');
-      
-      // 1. 取得を開始する前に、今の表示を消して「読み込み中」を出す
       let loadingMsg = "読み込み中...";
       if (currentSearchTag) loadingMsg = `${currentSearchTag} を検索中...`;
       else if (currentSearchUser) loadingMsg = `ID:${currentSearchUser} の投稿を読み込み中...`;
       else if (currentSearchQuery) loadingMsg = `「${currentSearchQuery}」を検索中...`;
       
-      tl.innerHTML = `<div style="padding:40px; color:#666; text-align:center;">
-                        <div class="loader-dots">${loadingMsg}</div>
-                      </div>`;
+      tl.innerHTML = `<div class="loader-wrapper"><div class="loader-dots">${loadingMsg}</div></div>`;
 
-      // 2. 検索条件をまとめる
       const userId = document.getElementById('userId').value;
       const requestData = {
         parentId: "",
@@ -185,45 +251,35 @@
       };
 
       try {
-        // 3. GASを呼び出す
         const posts = await callGas("fetchPosts", requestData);
-
-        // 4. 描画する
         tl.innerHTML = '';
         if (posts && posts.length > 0) {
           posts.forEach(p => tl.appendChild(renderPost(p)));
         } else {
-          tl.innerHTML = '<div style="padding:40px; color:#999; text-align:center;">投稿が見つかりませんでした</div>';
+          tl.innerHTML = '<div class="timeline-empty">投稿が見つかりませんでした</div>';
         }
       } catch (e) {
-        tl.innerHTML = '<div style="padding:40px; color:red; text-align:center;">読み込みに失敗しました</div>';
+        tl.innerHTML = '<div class="loader-wrapper" style="color:red;">読み込みに失敗しました</div>';
       }
     }
     
-    // 表示用のテキストを更新する
     function updateProfileView() {
       const name = document.getElementById('displayName').value;
       const id = document.getElementById('userId').value;
-      
       document.getElementById('display-name-view').innerText = name || "名前なし";
       document.getElementById('user-id-view').innerText = id ? `(ID: 設定済み)` : `(ID未設定)`;
     }
 
-    // 入力モードに切り替える
     function showProfileEdit() {
       document.getElementById('profile-display').style.display = 'none';
       document.getElementById('profile-edit').style.display = 'block';
     }
 
-    // 入力モードを閉じる
     function hideProfileEdit() {
       const name = document.getElementById('displayName').value;
       const id = document.getElementById('userId').value;
-      
-      // 保存
       localStorage.setItem('displayName', name);
       localStorage.setItem('userId', id);
-      
       updateProfileView();
       document.getElementById('profile-edit').style.display = 'none';
       document.getElementById('profile-display').style.display = 'flex';
@@ -258,7 +314,6 @@
             </button>
           ` : ''}
         </div>
-
         <div class="post-header">
           <span class="post-id">#${postIdStr}</span>
           <span class="user-name">${p.display_name}</span> 
@@ -266,15 +321,11 @@
           <span class="post-time">${relativeTime}</span>
           ${p.is_hidden === "TRUE" ? " <small class='status-label-hide'>(非表示)</small>" : ""}
         </div>
-        
         <div class="post-content" data-raw="${rawContent}">
           ${parseContent(p.content || "")}
         </div>
-        
         <div class="post-footer">
-          <button class="secondary" 
-                  id="btn-${uniqueKey}" 
-                  onclick="toggleReplies('${postIdStr}', '${uniqueKey}')" 
+          <button class="secondary" id="btn-${uniqueKey}" onclick="toggleReplies('${postIdStr}', '${uniqueKey}')" 
                   style="display: ${p.replyCount > 0 ? 'inline-block' : 'none'};">
             返信を表示 (${p.replyCount || 0})
           </button>
@@ -374,45 +425,13 @@
       const userId = document.getElementById('userId').value.trim();
       const content = document.getElementById('content').value.trim();
 
-      // --- バリデーションチェック ---
-      
-      // 1. 表示名のチェック
-      if (displayName.length === 0) {
-        alert("表示名を入力してください");
-        showProfileEdit(); // 入力欄を閉じていたら開く
-        return;
-      }
-      if (displayName.length > 20) {
-        alert("表示名は20文字以内で入力してください");
-        showProfileEdit();
-        return;
-      }
+      if (displayName.length === 0) { alert("表示名を入力してください"); showProfileEdit(); return; }
+      if (displayName.length > 20) { alert("表示名は20文字以内で入力してください"); showProfileEdit(); return; }
+      if (userId.length < 8) { alert("秘密コードは8文字以上で入力してください"); showProfileEdit(); return; }
+      if (content.length === 0) { alert("本文を入力してください"); return; }
+      if (content.length > 1000) { alert("本文は1000文字以内で入力してください"); return; }
 
-      // 2. パスワードのチェック
-      if (userId.length < 8) {
-        alert("秘密コードは8文字以上で入力してください");
-        showProfileEdit();
-        return;
-      }
-
-      // 3. 投稿本文のチェック
-      if (content.length === 0) {
-        alert("本文を入力してください");
-        return;
-      }
-      if (content.length > 1000) {
-        alert("本文は1000文字以内で入力してください");
-        return;
-      }
-
-      // --- チェック合格後の送信処理 ---
-      const data = {
-        displayName: displayName,
-        userId: userId,
-        content: content,
-        parentId: "" 
-      };
-
+      const data = { displayName, userId, content, parentId: "" };
       const originalText = btn.innerText;
       btn.disabled = true;
       btn.innerText = "送信中...";
@@ -424,7 +443,6 @@
         const res = await callGas("addNewPost", data);
         if (res.success) {
           document.getElementById('content').value = '';
-          // 投稿成功時にプロフィール欄を閉じるならここに追加
           hideProfileEdit(); 
           await loadTimeline();
         } else {
@@ -574,8 +592,7 @@
     function getRelativeTime(dateString) {
       const now = new Date();
       const posted = new Date(dateString);
-      const diffMs = now - posted;
-      const diffSec = Math.floor(diffMs / 1000);
+      const diffSec = Math.floor((now - posted) / 1000);
       const diffMin = Math.floor(diffSec / 60);
       const diffHour = Math.floor(diffMin / 60);
       const diffDay = Math.floor(diffHour / 24);
@@ -587,51 +604,34 @@
       return posted.toLocaleDateString();
     }
 
-    // 2. タグをクリックした時（ユーザー絞り込み中なら、その中でのタグ絞り込みにする）
     function setFilterTag(tag) {
-      const fullTag = "#" + tag;
-      currentSearchTag = fullTag;
-      currentSearchQuery = ""; // ワード検索とタグ検索は排他（混ぜると複雑なため）
-
+      currentSearchTag = "#" + tag;
+      currentSearchQuery = "";
       const input = document.getElementById('search-input');
-      if (input) input.value = fullTag;
-      
+      if (input) input.value = currentSearchTag;
       updateFilterUI();
     }
     
-    // 1. ユーザーIDをクリックした時（既存のタグ・ワード検索はリセットしてユーザー優先）
     function setFilterUser(userHash) {
       currentSearchUser = userHash;
-      // ユーザーを切り替える時は一旦他の検索はクリアするのが一般的
       currentSearchTag = "";
       currentSearchQuery = "";
-      
       const input = document.getElementById('search-input');
       if (input) input.value = "";
-      
-      updateFilterUI(); // UI更新用に関数化
-    }
-
-    // 3. 検索窓でEnterを押した時（ユーザー絞り込み中なら、その中でのワード検索にする）
-    function execSearch() {
-      const q = document.getElementById('search-input').value.trim();
-      currentSearchQuery = q;
-      currentSearchTag = ""; // タグ検索はワード検索で上書き
-
       updateFilterUI();
     }
 
-    // 5. 検索解除
+    function execSearch() {
+      currentSearchQuery = document.getElementById('search-input').value.trim();
+      currentSearchTag = "";
+      updateFilterUI();
+    }
+
     function clearFilter() {
       currentSearchTag = "";
       currentSearchQuery = "";
-      
       const input = document.getElementById('search-input');
-      if (input) {
-        input.value = "";
-        input.placeholder = "検索...";
-      }
-      
+      if (input) { input.value = ""; input.placeholder = "検索..."; }
       updateFilterUI();
     }
 
@@ -639,43 +639,27 @@
       currentSearchTag = "";
       currentSearchUser = "";
       currentSearchQuery = "";
-      
       const input = document.getElementById('search-input');
-      if (input) {
-        input.value = "";
-        input.placeholder = "検索...";
-      }
-      
+      if (input) { input.value = ""; input.placeholder = "検索..."; }
       updateFilterUI();
     }
 
-    // 4. UIの状態をまとめて管理する関数
     function updateFilterUI() {
       const header = document.getElementById('user-filter-header');
       const text = document.getElementById('user-filter-text');
       const clearBtn = document.getElementById('clear-btn');
-      const input = document.getElementById('search-input');
 
-      // ユーザー絞り込みヘッダーの制御
       if (currentSearchUser) {
-        if (header && text) {
-          text.innerText = `ID:${currentSearchUser} の投稿を表示中`;
-          header.style.display = "flex";
-        }
+        if (header && text) { text.innerText = `ID:${currentSearchUser} の投稿を表示中`; header.style.display = "flex"; }
       } else {
         if (header) header.style.display = "none";
       }
 
-      // 検索窓の×ボタンの制御
-      if (clearBtn) {
-        clearBtn.style.display = (currentSearchTag || currentSearchQuery) ? "block" : "none";
-      }
+      if (clearBtn) clearBtn.style.display = (currentSearchTag || currentSearchQuery) ? "block" : "none";
 
-      // 常にトップへ戻って再読み込み
       window.scrollTo({ top: 0, behavior: 'smooth' });
       loadTimeline();
     }
-    
   </script>
 </body>
 </html>
