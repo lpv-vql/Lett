@@ -126,7 +126,11 @@
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbylR6w0U-fMGwHSggjdGw3jWR8F1eCCYoUGZskh6O6cpKwI7z12R3eIIggbcX6U0ZKo/exec"; 
-    const md = window.markdownit();
+    const md = window.markdownit({
+      breaks: true,
+      linkify: true,
+      html: false
+    });
 
     let currentSearchTag = "";
     let currentSearchUser = "";
