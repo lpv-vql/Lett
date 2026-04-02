@@ -225,14 +225,38 @@
       if (savedName) document.getElementById('displayName').value = savedName;
       if (savedId) document.getElementById('userId').value = savedId;
 
-      if (!savedName) {
-        showProfileEdit();
-      } else {
-        updateProfileView();
+      if (!savedName) showProfileEdit();
+      else updateProfileView();
+
+      // --- URLパラメーターから検索条件を復元 ---
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('tag')) {
+        currentSearchTag = '#' + params.get('tag');
+        document.getElementById('search-input').value = currentSearchTag;
       }
+      if (params.has('user')) {
+        currentSearchUser = params.get('user');
+      }
+      if (params.has('q')) {
+        currentSearchQuery = params.get('q');
+        document.getElementById('search-input').value = currentSearchQuery;
+      }
+
+      // 初回表示のUI更新
+      const header = document.getElementById('user-filter-header');
+      const text = document.getElementById('user-filter-text');
+      if (currentSearchUser && header && text) {
+        text.innerText = `ID:${currentSearchUser} 内を検索中`;
+        header.style.display = "flex";
+      }
+
       loadTimeline();
     };
 
+    window.onpopstate = function() {
+      location.reload();
+    };
+    
     async function callGas(method, data) {
       const response = await fetch(GAS_URL, {
         method: "POST",
@@ -641,6 +665,7 @@
       currentSearchQuery = "";
       const input = document.getElementById('search-input');
       if (input) { input.value = ""; input.placeholder = "検索..."; }
+      history.pushState(null, '', window.location.pathname);
       updateFilterUI();
     }
 
@@ -666,8 +691,23 @@
 
       if (clearBtn) clearBtn.style.display = (currentSearchTag || currentSearchQuery) ? "block" : "none";
 
+      updateURLParams();
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
       loadTimeline();
+    }
+    
+    // URLのパラメーターを現在の検索状況に合わせる
+    function updateURLParams() {
+      const params = new URLSearchParams();
+      
+      if (currentSearchTag) params.set('tag', currentSearchTag.replace('#', ''));
+      if (currentSearchUser) params.set('user', currentSearchUser);
+      if (currentSearchQuery) params.set('q', currentSearchQuery);
+
+      // パラメーターがある場合は ?... を付け、ない場合はクリアする
+      const newRelativePathQuery = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      history.pushState(null, '', newRelativePathQuery);
     }
   </script>
 </body>
