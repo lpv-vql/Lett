@@ -121,9 +121,8 @@
     .post-id { background: #f4f4f4; padding: 2px 4px; margin: 0 5px; }
     .user-id-link { margin-left: 5px; color: #777; cursor: pointer; }
     .user-id-link:hover, .hashtag:hover, .post-time:hover { color: #007bff; text-decoration: underline; }
-    .post-time { font-weight: normal; margin-left: 10px; color: #999; font-size: 0.85em; cursor: pointer; user-select: none; transition: color 0.1s; }
-    .post-time:hover { color: #333 !important; text-decoration: underline; }
-    .post-time:active { color: #007bff !important; }
+    .post-time { font-weight: normal; margin-left: 10px; color: #777; font-size: 0.85em; cursor: pointer; user-select: none;}
+    .post-time:active { color: #777 !important; }
     .hashtag { color: #007bff; cursor: pointer; }
     .status-label-hide { color: red; font-size: small; }
 
@@ -356,7 +355,7 @@ function renderPost(p, isReply = false) {
           <span class="post-id">#${postIdStr}</span>
           <span class="user-name">${p.display_name}</span> 
           <span class="user-id-link" onclick="setFilterUser('${p.user_hash}')">ID:${p.user_hash}</span>
-          <span class="post-time" onmousedown="this.innerText='${fullDate}'" onmouseup="this.innerText='${relativeTime}'">
+          <span class="post-time" onmousedown="this.innerText='${fullDate}'" onmouseup="this.innerText='${relativeTime}'" onmouseleave="this.innerText='${relativeTime}'">
             ${relativeTime}
           </span>
           ${p.is_hidden === "TRUE" ? " <small class='status-label-hide'>(非表示)</small>" : ""}
